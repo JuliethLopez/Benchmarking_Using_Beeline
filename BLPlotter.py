@@ -437,10 +437,10 @@ def main():
         print('\n\nGenerating overview plot...')
 
         #TODO add option to select overview columns
-        #resType = ['AUPRC Ratio','Early Precision Ratio']
-        #resTypeFileName = [ 'AUPRC', 'EPr']
-        resType = ['AUPRC Ratio', 'Stability Across Datasets']
-        resTypeFileName = [ 'AUPRC', 'Jaccard']
+        resType = ['AUPRC Ratio','Early Precision Ratio']
+        resTypeFileName = [ 'AUPRC', 'EPr']
+        #resType = ['AUPRC Ratio', 'Stability Across Datasets']
+        #resTypeFileName = [ 'AUPRC', 'Jaccard']
         
         # Store results from each dataset in a dictionary and
         # then convert it to a dataframe.
@@ -492,7 +492,7 @@ def main():
         pale4 = sns.color_palette("magma_r",13)[:-2]
         pale5 = sns.cubehelix_palette(rot=-0.3,n_colors = 11)
         pale5 = sns.color_palette('cividis_r', n_colors = 12)[:-1]
-        COplot(overviewDF, width = 3*len(evalConfigs) + 1, height = len(algs) + 3, randValues = [1, 0, 0, 0],
+        COplot(overviewDF, width = 3*len(evalConfigs) + 5, height = len(algs) + 3, randValues = [1, 0, 0, 0],
                 shape = ['hm','hm','hm','arrow'], palettes = [pale3, pale3h, pale5 ,pale3r],
                 levels = resType,  rotation = [0,0,0,0],
                 switch = [False, False, True, False])

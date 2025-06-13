@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 from arboreto.algo import grnboost2, genie3
 from arboreto.utils import load_tf_names
-from distributed import Client, LocalCluster
+#from distributed import Client, LocalCluster
 
 def parseArgs(args):
     parser = OptionParser()
@@ -26,10 +26,15 @@ def main(args):
     opts, args = parseArgs(args)
     inDF = pd.read_csv(opts.inFile, sep = '\t', index_col = 0, header = 0)
 
-    client = Client(processes = False)    
+    # Configura un clúster explícitamente
+    #cluster = LocalCluster(n_workers=4, threads_per_worker=2, processes=True, protocol='tcp') # protocolo de conexión Dask de inproc (inter-process) a tcp, funciona mejor en docker
+    #client = Client(cluster)
+    client = Client("tcp://172.17.0.1:8786") #cluster
+    #client = Client(processes = False) #por defecto beeline
 
     if opts.algo == 'GENIE3':
         network = genie3(inDF.to_numpy(), client_or_address = client, gene_names = inDF.columns)
+        #network = genie3(inDF.to_numpy(), gene_names = inDF.columns)
         network.to_csv(opts.outFile, index = False, sep = '\t')
 
     elif opts.algo == 'GRNBoost2':

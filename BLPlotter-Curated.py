@@ -105,8 +105,10 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
             modifiedDF['dataset'].str.contains('-70')
         ]
         outputs = ['50', '70']
+        existing_cats = ['0', '50', '70']
         modifiedDF['category'] = pd.Series(np.select(conditions, outputs, '0'))
-        modifiedDF['category'] = modifiedDF['category'].astype('category').cat.reorder_categories(['0', '50', '70'])        
+        modifiedDF['category'] = modifiedDF['category'].astype('category').cat.set_categories(existing_cats, ordered=True)
+        #modifiedDF['category'] = modifiedDF['category'].astype('category').cat.reorder_categories(['0', '50', '70'])        
               
         if len(datasets) > 1:
             subax = axes[i]
@@ -124,6 +126,12 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
                         hue = "category",
                         palette = sns.color_palette("Set1"),
                         ax = subax)
+        # Rotate x-axis labels
+        subax.set_xticklabels(
+            subax.get_xticklabels(),
+            rotation=45,
+            ha='right'  # aligns labels with ticks more accurately
+        )
         # Get the legend from just the box plot
         handles, labels = ax.get_legend_handles_labels()
         sns.swarmplot(y ='value', x = 'variable', data = modifiedDF,
@@ -518,12 +526,28 @@ def main():
         pale4 = sns.color_palette("magma_r",13)[:-2]
         pale5 = sns.cubehelix_palette(rot=-0.3,n_colors = 11)
         pale5 = sns.color_palette('cividis_r', n_colors = 12)[:-1]
-        COplot(overviewDF, width = 3*len(evalConfigs) + 1, height = len(algs) + 3, randValues = [1, 0, 0, 0],
-                shape = ['hm','hm','hm','arrow'], palettes = [pale3, pale3h, pale5 ,pale3r],
-                levels = resType,  rotation = [0,0,0,0],
-                switch = [False, False, True, False])
+        #fig, ax = plt.subplots(figsize=(40, 30))
+        COplot(
+            overviewDF, 
+            width=3 * len(evalConfigs) + 1, 
+            height=len(algs) + 3, 
+            randValues=[1, 0, 0, 0],
+            shape=['hm', 'hm', 'hm', 'arrow'], 
+            palettes=[pale3, pale3h, pale5, pale3r],
+            levels=resType,  
+            rotation=[0, 0, 0, 0],
+            switch=[False, False, True, False]
+        )
+        sns.set_context("paper")  # Try "paper", "notebook", or set manually
+        plt.xticks(fontsize=8, rotation=45, ha='right')  # Or try 90
+        plt.yticks(fontsize=8, rotation=0)  # usually y-axis is fine without rotation
+        plt.subplots_adjust(left=0.2, right=0.95, top=0.95, bottom=0.3)
         
-        plt.tight_layout()
+        plt.tight_layout(pad=3.0)
+        for ax in plt.gcf().axes:
+            for label in ax.get_xticklabels():
+                label.set_rotation(45)
+                label.set_ha('right')
         
         file = opts.output + '/' \
                 + '-'.join([str(c.output_settings.output_prefix) for c in evalConfigs]) + '-overview.pdf'

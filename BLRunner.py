@@ -62,12 +62,15 @@ def main():
 
 
     for idx in range(len(evaluation.runners)):
+        print(f'Generating inputs for {evaluation.runners[idx].name}')
         evaluation.runners[idx].generateInputs()
 
     for idx in range(len(evaluation.runners)):
+        print(f'Running {evaluation.runners[idx].name}')
         evaluation.runners[idx].run()
 
     for idx in range(len(evaluation.runners)):
+        print(f'Parsing output for {evaluation.runners[idx].name}')
         evaluation.runners[idx].parseOutput()
 
     print('Evaluation complete')

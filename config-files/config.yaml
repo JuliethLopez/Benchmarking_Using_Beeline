@@ -47,13 +47,13 @@ input_settings:
 
         - name: "GRNVBEM"
           params: 
-              should_run: [True]
+              should_run: [False]
 
               
 
         - name: "GENIE3"
           params: 
-              should_run: [True]
+              should_run: [False]
               
               
               
@@ -72,32 +72,32 @@ input_settings:
                
         - name: "SCODE"
           params:
-              should_run: [True]
+              should_run: [False]
               z: [10]
               nIter: [1000]
               nRep: [6]
 
         - name: "SCNS"
           params: 
-              should_run: [True]
+              should_run: [False]
               
               
         - name: "SINCERITIES"
           params: 
-              should_run: [True]
+              should_run: [False]
               nBins: [10]
               
               
         - name: "LEAP"
           params: 
-              should_run: [True]
+              should_run: [False]
               # Default maxLag value is 0.33
               maxLag: [0.33]
              
               
         - name: "GRISLI"
           params: 
-              should_run: [True]
+              should_run: [False]
               L: [10]
               R: [3000]
               alphaMin: [0.0]
@@ -105,7 +105,7 @@ input_settings:
 
         - name: "SINGE"
           params: 
-              should_run: [True]
+              should_run: [False]
               lambda: [0.01]
               dT: [15]
               num_lags: [5]
@@ -118,7 +118,7 @@ input_settings:
 
         - name: "SCRIBE"
           params: 
-              should_run: [True]
+              should_run: [False]
               ### required parameters
               # a list of delay values
               delay: ["5"]
@@ -141,10 +141,18 @@ input_settings:
 
         - name: "SCSGL"
           params:
-              should_run: [True]
+              should_run: [False]
               pos_density: [0.45]
               neg_density: [0.45]
               assoc: ["correlation"]
+
+        - name: "INFERELATOR"
+          params:
+              should_run: [True]
+              # Any parameters that can be passed to this algorithm
+              #paramX: [0.1]
+              #paramY: ['Text']
+              
 
 
 # Output Settings: initialize base output folder names

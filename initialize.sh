@@ -158,5 +158,3 @@ elif [ "$(docker images -q scsgl:base 2> /dev/null)" != "" ]; then
 else
     echo "Oops! Unable to build Docker container for SCSGL"
 fi
-
-cd $BASEDIR

@@ -27,12 +27,14 @@ def run(RunnerObj):
     '''
     inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
                     "/GRNBOOST2/ExpressionData.csv"
+    
     # make output dirs if they do not exist:
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/GRNBOOST2/"
     os.makedirs(outDir, exist_ok = True)
-
     
+    # make output file
     outPath = "data/" +  str(outDir) + 'outFile.txt'
+    
     cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data/ --expose=41269', 
                          'grnbeeline/arboreto:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 
                          'python runArboreto.py --algo=GRNBoost2',

@@ -1,5 +1,6 @@
 #This is the base image upon which necessary libraries are installed
-FROM python:3.8  
+#FROM python:3.8  
+FROM continuumio/anaconda3:2024.02-1
 
 #Additional information
 LABEL Maintainer="Yiqi Su <yiqisu@vt.edu>" 
@@ -17,13 +18,16 @@ COPY run_scSGL.py /
 COPY scSGL /scSGL   
 
 #Installl time command to compute time taken
-RUN apt-get update && apt-get install -y r-base time  
+#RUN apt-get update && apt-get install -y r-base time  
 
 #Install the requirments and install R to conda environment
-RUN pip install -r /scSGL/requirements.txt 
+#RUN pip install -r /scSGL/requirements.txt 
+COPY scSGL/environment.yml /
+RUN conda env create -f /environment.yml
 
 #Install pcaPP to use zero inflated Kendall tau as a kernel
-RUN Rscript -e "install.packages('pcaPP')" 
+RUN conda run -n scsgl-env Rscript -e "install.packages('pcaPP', repos='https://cloud.r-project.org')"
+#RUN Rscript -e "install.packages('pcaPP')" 
 
 #Make a directory to mount the folder containing input files
 RUN mkdir data/ 

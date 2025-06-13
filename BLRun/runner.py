@@ -12,6 +12,7 @@ import BLRun.grisliRunner as GRISLI
 import BLRun.singeRunner as SINGE
 import BLRun.scribeRunner as SCRIBE
 import BLRun.scsglRunner as SCSGL
+import BLRun.inferelatorRunner as INFERELATOR
 
 from pathlib import Path
 
@@ -28,7 +29,8 @@ InputMapper = {'SCODE':SCODE.generateInputs,
                'GRISLI':GRISLI.generateInputs,
                'SINGE':SINGE.generateInputs,
                'SCRIBE':SCRIBE.generateInputs,
-               'SCSGL':SCSGL.generateInputs}
+               'SCSGL':SCSGL.generateInputs,
+               'INFERELATOR':INFERELATOR.generateInputs}
 
 
 
@@ -46,7 +48,8 @@ AlgorithmMapper = {'SCODE':SCODE.run,
             'GRISLI':GRISLI.run,
             'SINGE':SINGE.run,
             'SCRIBE':SCRIBE.run,
-            'SCSGL':SCSGL.run}
+            'SCSGL':SCSGL.run,
+            'INFERELATOR':INFERELATOR.run}
 
 
 
@@ -63,15 +66,15 @@ OutputParser = {'SCODE':SCODE.parseOutput,
             'GRISLI':GRISLI.parseOutput,
             'SINGE':SINGE.parseOutput,
             'SCRIBE':SCRIBE.parseOutput,
-            'SCSGL':SCSGL.parseOutput}
+            'SCSGL':SCSGL.parseOutput,
+            'INFERELATOR':INFERELATOR.parseOutput}
 
 
 class Runner(object):
     '''
     A runnable analysis to be incorporated into the pipeline
     '''
-    def __init__(self,
-                params):
+    def __init__(self, params):
         self.name = params['name']
         self.inputDir = params['inputDir']
         self.params = params['params']
