@@ -1,4 +1,4 @@
-inputs/
+inputs/*
 __pycache__/
 outputs/
 src/.*
