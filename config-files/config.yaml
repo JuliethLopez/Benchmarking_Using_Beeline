@@ -42,12 +42,12 @@ input_settings:
               
         - name: "PIDC"
           params: 
-              should_run: [True]
+              should_run: [False] #True
 
 
         - name: "GRNVBEM"
           params: 
-              should_run: [False]
+              should_run: [False] #True
 
               
 
@@ -59,12 +59,12 @@ input_settings:
               
         - name: "GRNBOOST2"
           params: 
-              should_run: [True]
+              should_run: [False] #True
               
               
         - name: "PPCOR"
           params: 
-              should_run: [True]
+              should_run: [False] #True
               # p-value cutoff
               # Used in parsing output
               pVal: [0.01]
@@ -148,12 +148,14 @@ input_settings:
 
         - name: "INFERELATOR"
           params:
-              should_run: [True]
+              should_run: [False] #True
               # Any parameters that can be passed to this algorithm
               #paramX: [0.1]
               #paramY: ['Text']
               
-
+        - name: "TF_hdWGCNA"
+          params:
+              should_run: [True]
 
 # Output Settings: initialize base output folder names
 output_settings:
