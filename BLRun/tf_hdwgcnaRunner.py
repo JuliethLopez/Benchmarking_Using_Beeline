@@ -15,13 +15,13 @@ def generateInputs(RunnerObj):
         print("Input folder for TF_hdWGCNA does not exist, creating input folder...")
         RunnerObj.inputDir.joinpath("TF_hdWGCNA").mkdir(exist_ok = False)
     
-    if not RunnerObj.inputDir.joinpath("TF_hdWGCNA/ExpressionData.tsv").exists():
+    if not RunnerObj.inputDir.joinpath("TF_hdWGCNA/ExpressionData.csv").exists():
         # input data
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
                                      header = 0, index_col = 0)
 
         # Write .csv file
-        ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("TF_hdWGCNA/ExpressionData.tsv"),
+        ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("TF_hdWGCNA/ExpressionData.csv"),
                              sep = '\t', header  = True, index = True)
         
 

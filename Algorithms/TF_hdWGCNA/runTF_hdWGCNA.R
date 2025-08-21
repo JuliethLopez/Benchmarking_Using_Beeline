@@ -32,10 +32,5 @@ outFile <-  args[2]
 
 # input expression data
 inputExpr <- read.table(inFile, sep=",", header = 1, row.names = 1)
-writeLines("hdWGCNA libraries loaded successfully", file="output_test.txt", append = FALSE)
 
-# Add more lines to the same file
-new_lines <- head(inputExpr)
-write(new_lines, file_path, append = TRUE)
-
-file.show("output_test.txt")
+print(head(inputExpr))
