@@ -19,11 +19,10 @@ def generateInputs(RunnerObj):
         # input data
         ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
                                      header = 0, index_col = 0)
-
-        # Write .csv file
-        ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("TF_hdWGCNA/ExpressionData.csv"),
-                             sep = '\t', header  = True, index = True)
         
+        # Write .csv file
+        ExpressionData.to_csv(RunnerObj.inputDir.joinpath("TF_hdWGCNA/ExpressionData.csv"),
+                             sep = ',', header  = True, index = True)
 
 def run(RunnerObj):
     '''
@@ -39,11 +38,10 @@ def run(RunnerObj):
     os.makedirs(outDir, exist_ok = True)
     
     outPath =  "data/" + str(outDir) + 'outFile.txt'
-    cmdToRun = ' '.join([#'docker run --rm -v',
-                         #str(Path.cwd()) + ':/data',
-                         #'tf_hdwgcna:base',
-                         #'/bin/sh -c \"time -v -o',
-                         'docker run --rm -v', str(Path.cwd())+':/data/ tf_hdwgcna:base /bin/sh -c \"time -v -o',
+    cmdToRun = ' '.join(['docker run --rm -v', 
+                         str(Path.cwd())+':/data/',  # <-- add the missing space and slash
+                         'tf_hdwgcna:base',          # <-- image name as a separate argument
+                         '/bin/sh -c \"time -v -o',
                          "data/" + str(outDir) + 'time.txt', 
                          'Rscript runTF_hdWGCNA.R',
                          inputPath, 
@@ -72,4 +70,6 @@ def parseOutput(RunnerObj):
     OutDF = pd.read_csv(outDir+'outFile.txt', sep = '\t', header = 0)
 
     # Formats the outFile if necessary
-    print("Formats the outFile if necessary...")
+    outFile = OutDF[["tf", "gene", "Cor"]]
+    outFile.columns = ['Gene1','Gene2','EdgeWeight']
+    outFile.to_csv(f'{outDir}/rankedEdges.csv', sep='\t', index=False)

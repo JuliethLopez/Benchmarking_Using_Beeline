@@ -44,15 +44,12 @@ RUN R -e "BiocManager::install(c( \
     'EnsDb.Hsapiens.v86', \
     'BSgenome.Hsapiens.UCSC.hg38', \
     'JASPAR2020', \
-    'JASPAR2024' \
-    'devtools' \
-    'UCell' \
-    'GenomicRanges' \
+    'JASPAR2024', \
+    'devtools', \
+    'UCell', \
+    'GenomicRanges', \
     'GeneOverlap' \
 ), ask=FALSE, update=FALSE)"
-
-# Install packages with devtools
-RUN R -e "devtools::install_github('smorabit/hdWGCNA', ref='dev')"
 
 # Install CRAN packages (xgboost, tidyverse, cowplot, patchwork, magrittr, igraph)
 ##RUN R -e "install.packages('https://cran.r-project.org/src/contrib/BTR_1.2.4.tar.gz', type = 'source', dependencies = TRUE)"
@@ -66,7 +63,10 @@ RUN R -e "install.packages(c( \
 ), repos='https://cloud.r-project.org/')"
 
 # Install additional Bioconductor/CRAN packages for hdWGCNA workflow
-RUN R -e "BiocManager::install(c('Seurat', 'WGCNA', 'hdWGCNA'), ask=FALSE, update=FALSE)"
+RUN R -e "BiocManager::install(c('Seurat', 'WGCNA'), ask=FALSE, update=FALSE)"
+
+# Install packages with devtools
+RUN R -e "devtools::install_github('smorabit/hdWGCNA', ref='dev')"
 
 COPY runTF_hdWGCNA.R /
 
