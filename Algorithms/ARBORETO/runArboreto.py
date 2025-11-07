@@ -2,9 +2,16 @@ from optparse import OptionParser
 import os
 import sys
 import pandas as pd
+import dask
+dask.config.set({
+    "distributed.comm.serialization": ["pickle"]
+})
+from dask.distributed import Client, LocalCluster
+#from distributed import Client, LocalCluster
 from arboreto.algo import grnboost2, genie3
 from arboreto.utils import load_tf_names
-#from distributed import Client, LocalCluster
+
+#print("RUNNING ARBORETO POR FIN!", flush=True)
 
 def parseArgs(args):
     parser = OptionParser()
@@ -26,11 +33,30 @@ def main(args):
     opts, args = parseArgs(args)
     inDF = pd.read_csv(opts.inFile, sep = '\t', index_col = 0, header = 0)
 
-    # Configura un clúster explícitamente
-    #cluster = LocalCluster(n_workers=4, threads_per_worker=2, processes=True, protocol='tcp') # protocolo de conexión Dask de inproc (inter-process) a tcp, funciona mejor en docker
-    #client = Client(cluster)
-    client = Client("tcp://172.17.0.1:8786") #cluster
-    #client = Client(processes = False) #por defecto beeline
+    # Configurar el clúster Dask local o conectar a uno existente (aqui se debe poner expose en docker/singularity run)
+    cluster = None
+    client = None
+
+    try:
+        # Intentar conectarse a un cluster existente
+        client = Client("tcp://172.17.0.1:8786")
+        print("Connected to existing cluster:", client)
+
+    except Exception as e1:
+        print("Could not connect to existing cluster:", e1)
+        print("Trying LocalCluster (processes=False)...")
+        try:
+            # Intentar crear un nuevo LocalCluster sin procesos
+            cluster = LocalCluster(n_workers=1, threads_per_worker=1, processes=False, memory_limit="auto")
+            client = Client(cluster)
+            print("Started LocalCluster (processes=False):", cluster)
+        except Exception as e2:
+            print("Could not start LocalCluster:", e2)
+            print("Falling back to simple in-process client...")
+            # Último recurso: Client sin cluster
+            client = Client(processes=False)
+            print("Started simple Client (processes=False):", client)
+
 
     if opts.algo == 'GENIE3':
         network = genie3(inDF.to_numpy(), client_or_address = client, gene_names = inDF.columns)

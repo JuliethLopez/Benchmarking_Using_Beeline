@@ -2,10 +2,10 @@ name: BEELINE
 channels:
   - defaults
 dependencies:
-  - python=3.7.1
-  - r=3.5.0
+  - python=3.7
+  - r-base=3.6
   - pip
-  - rpy2==2.9.1
+  - rpy2==3.4.5
   - matplotlib==3.0.2
   - pandas==0.23.4
   - networkx==2.2
@@ -13,6 +13,6 @@ dependencies:
   - tqdm==4.28.1
   - numpy==1.15.4
   - scikit-learn==0.21.2
-  - PyYAML==5.4
+  - pyyaml==6.0.2
   - pip:
     - mygene==3.2.2

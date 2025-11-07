@@ -42,7 +42,7 @@ input_settings:
               
         - name: "PIDC"
           params: 
-              should_run: [False] #True
+              should_run: [True] #True
 
 
         - name: "GRNVBEM"
@@ -155,7 +155,7 @@ input_settings:
               
         - name: "TF_hdWGCNA"
           params:
-              should_run: [True]
+              should_run: [False]
 
 # Output Settings: initialize base output folder names
 output_settings:

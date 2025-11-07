@@ -1,7 +1,11 @@
 # Include packages
 
+print("RUNNING PIDC!!!!!")
+
 using NetworkInference
 using LightGraphs
+
+println("RUNNING PIDC correctly!!!!!")
 
 algorithm = PIDCNetworkInference()
 

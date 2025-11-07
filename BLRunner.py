@@ -26,7 +26,6 @@ import pandas as pd
 import BLRun as br
 yaml.warnings({'YAMLLoadWarning': False})
 
-
 def get_parser() -> argparse.ArgumentParser:
     '''
     :return: an argparse ArgumentParser object for parsing command

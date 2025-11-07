@@ -25,7 +25,7 @@ def run(RunnerObj):
     '''
     Function to run GRNBOOST2 algorithm
     '''
-    inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
+    inputPath = "/data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
                     "/GRNBOOST2/ExpressionData.csv"
     
     # make output dirs if they do not exist:
@@ -33,12 +33,19 @@ def run(RunnerObj):
     os.makedirs(outDir, exist_ok = True)
     
     # make output file
-    outPath = "data/" +  str(outDir) + 'outFile.txt'
+    outPath = "/data/" +  str(outDir) + 'outFile.txt'
     
-    cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data/ --expose=41269', 
-                         'grnbeeline/arboreto:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 
-                         'python runArboreto.py --algo=GRNBoost2',
-                         '--inFile='+inputPath, '--outFile='+outPath, '\"'])
+    #cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data/ --expose=41269',  #expose es util con Client Dask
+    #                     'grnbeeline/arboreto:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 
+    #                     'python runArboreto.py --algo=GRNBoost2',
+    #                     '--inFile='+inputPath, '--outFile='+outPath, '\"']) # for docker
+    cmdToRun = ' '.join(['/software/spack_environments/default/00/opt/spack/linux-ubuntu22.04-x86_64_v3/gcc-13.1.0/singularityce-4.1.0-wmywvbn7r2vl5opbrcibxvtcjxhtwojh/bin/singularity exec --cleanenv -B',
+                        str(Path.cwd()) + ':/data/',
+                        str(Path.cwd() / 'Algorithms/ARBORETO/arboreto_1.0.sif'),
+                        '/bin/sh -c \"time -v -o',
+                        "/data/" + str(outDir) + 'time.txt',
+                        'python /data/Algorithms/ARBORETO/runArboreto.py --algo=GRNBoost2', #'/bin/sh -c \"pwd && ls -lah'
+                        '--inFile='+inputPath, '--outFile='+outPath, '\"']) #for singularity
     print(cmdToRun)
     os.system(cmdToRun)
 

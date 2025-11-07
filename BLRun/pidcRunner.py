@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from pathlib import Path
 import numpy as np
+import subprocess #added to debug
 
 def generateInputs(RunnerObj):
     '''
@@ -23,16 +24,26 @@ def run(RunnerObj):
     '''
     Function to run PIDC algorithm
     '''
-    inputPath = "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
+    inputPath = "/data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1] + \
                     "/PIDC/ExpressionData.csv"
     
     # make output dirs if they do not exist:
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/PIDC/"
     os.makedirs(outDir, exist_ok = True)
     
-    outPath = 'data/'+ str(outDir) + 'outFile.txt'
-    cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data grnbeeline/pidc:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 'julia runPIDC.jl',
-                         inputPath, outPath, '\"'])
+    outPath = '/data/'+ str(outDir) + 'outFile.txt'
+    #cmdToRun = ' '.join(['docker run --rm -v', str(Path.cwd())+':/data/ grnbeeline/pidc:base /bin/sh -c \"time -v -o',
+    #                     "data/" + str(outDir) + 'time.txt', 'julia runPIDC.jl',
+    #                     inputPath, outPath, '\"'])
+    
+    cmdToRun = ' '.join(['/software/spack_environments/default/00/opt/spack/linux-ubuntu22.04-x86_64_v3/gcc-13.1.0/singularityce-4.1.0-wmywvbn7r2vl5opbrcibxvtcjxhtwojh/bin/singularity exec -B',
+                        str(Path.cwd()) + ':/data/',
+                        str(Path.cwd() / 'Algorithms/PIDC/pidc_1.0.sif'),
+                        '/bin/sh -c \"time -v -o',
+                        "/data/" + str(outDir) + 'time.txt',
+                        "julia /data/Algorithms/PIDC/runPIDC.jl", #'/bin/sh -c \"pwd && ls -lah'"
+                        inputPath, outPath, '\"']) #for singularity
+
     print(cmdToRun)
     os.system(cmdToRun)
 

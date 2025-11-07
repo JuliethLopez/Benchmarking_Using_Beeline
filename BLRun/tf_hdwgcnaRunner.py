@@ -38,14 +38,21 @@ def run(RunnerObj):
     os.makedirs(outDir, exist_ok = True)
     
     outPath =  "data/" + str(outDir) + 'outFile.txt'
-    cmdToRun = ' '.join(['docker run --rm -v', 
-                         str(Path.cwd())+':/data/',  # <-- add the missing space and slash
-                         'tf_hdwgcna:base',          # <-- image name as a separate argument
-                         '/bin/sh -c \"time -v -o',
-                         "data/" + str(outDir) + 'time.txt', 
-                         'Rscript runTF_hdWGCNA.R',
-                         inputPath, 
-                         outPath, '\"'])
+    #cmdToRun = ' '.join(['docker run --rm -v', 
+    #                     str(Path.cwd())+':/data/',  # <-- add the missing space and slash
+    #                     'tf_hdwgcna:base',          # <-- image name as a separate argument
+    #                     '/bin/sh -c \"time -v -o',
+    #                     "data/" + str(outDir) + 'time.txt', 
+    #                     'Rscript runTF_hdWGCNA.R',
+    #                     inputPath, 
+    #                     outPath, '\"'])
+    cmdToRun = ' '.join(['/software/spack_environments/default/00/opt/spack/linux-ubuntu22.04-x86_64_v3/gcc-13.1.0/singularityce-4.1.0-wmywvbn7r2vl5opbrcibxvtcjxhtwojh/bin/singularity exec --cleanenv -B',
+                        str(Path.cwd()) + ':/data/',
+                        str(Path.cwd() / 'Algorithms/TF_hdWGCNA/tf_hdwgcna_1.0.sif'),
+                        '/bin/sh -c \"time -v -o',
+                        "/data/" + str(outDir) + 'time.txt',
+                        'python /data/Algorithms/TF_hdWGCNA/runTF_hdWGCNA.py',
+                        '--inFile='+inputPath, '--outFile='+outPath, '\"']) #for singularity
     print(cmdToRun)
     os.system(cmdToRun)
 
