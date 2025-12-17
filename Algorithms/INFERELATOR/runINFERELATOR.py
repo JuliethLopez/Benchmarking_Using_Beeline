@@ -19,6 +19,7 @@ import argparse
 import pandas as pd #to load read GSD dataset
 import numpy as np
 import sys
+print(sys.path) #julieth
 sys.path.append('INFERELATOR') #to add a path to search for the requested module
 
 from inferelator import inferelator_workflow, inferelator_verbose_level, MPControl, CrossValidationManager
@@ -99,9 +100,15 @@ def set_up_fig5a(wkf):
     return cv_wrap
 
 def main(args):
-    #import os
-    #print(f"Running in CWD: {os.getcwd()}")
+    import os
+    print(f"Running in CWD: {os.getcwd()}")
+    print("using args:")
+    print(args)
+    print(os.system("ls -lah"))
+    print(os.system("ls /"))
+    print(os.system("find / -name \"ExpressionData.tsv\" 2>/dev/null"))
     opts = parse_arguments()
+    print(opts) #julieth
 
     # create the output dir if the output directory does not exist
     if not os.path.exists(opts.output_dir):
@@ -114,15 +121,14 @@ def main(args):
 
     set_up_fig5a(worker).run()
 
-    network_output_name = f'{opts.outdir}/figure_5a_shuffled/random_seed_42/network.tsv.gz'
+    network_output_name = f'{opts.output_dir}/figure_5a_shuffled/random_seed_42/network.tsv.gz'
     network_output = pd.read_csv(network_output_name, sep='\t', index_col=None)
-    
-    # select only Gene1/regulator Gene2/target and EdgeWeight/model_coefficient
+
+    # Select only required columns
     output = network_output[["regulator", "target", "model_coefficient"]]
-    #Each edge is also associated with a weight, which is either positive or negative depending on the sign of the edge.
+
+    # Write final output
     output.to_csv(opts.out_file, sep='\t', index=False)
-    
-    G.to_csv(opts.out_file, index = False, sep = '\t')  #to write the output file
 
 
 if __name__ == "__main__":

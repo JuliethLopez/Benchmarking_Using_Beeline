@@ -38,23 +38,29 @@ def run(RunnerObj):
     os.makedirs(outDir, exist_ok = True)
     
     outPath = "/data/" +  str(outDir) + 'outFile.txt'
+    print("The outPath is:...")
+    print(outPath)
+
+    #print(RunnerObj.container) #julieth
+
     #cmdToRun = ' '.join(['docker run --rm -v', 
     #                    str(Path.cwd())+':/data/ grnbeeline/ppcor:base /bin/sh -c \"time -v -o',
     #                    "data/" + str(outDir) + 'time.txt', 
     #                    'Rscript runPPCOR.R',
     #                    inputPath, outPath, '\"']) #for docker
-    #cmdToRun = ' '.join(['pwd && ls -la']) #check current folder and content
+    #cmdToRun = ' '.join(['pwd && cd Algorithms/PPCOR && ls -la']) #check current folder and content
 
-    
-    cmdToRun = ' '.join(['/software/spack_environments/default/00/opt/spack/linux-ubuntu22.04-x86_64_v3/gcc-13.1.0/singularityce-4.1.0-wmywvbn7r2vl5opbrcibxvtcjxhtwojh/bin/singularity exec --cleanenv -B',
+    cmdToRun = ' '.join(['/software/singularity/3.11.4//bin/singularity exec --cleanenv -B',
                         str(Path.cwd()) + ':/data',
                         str(Path.cwd() / 'Algorithms/PPCOR/ppcor_1.0.sif'),
+                        #'/bin/sh -c "echo OK > /data/'+ str(outDir) +'test2.txt"'
                         '/bin/sh -c \"time -v -o',
-                        "/data/" + str(outDir) + 'time.txt',
-                        'Rscript /data/Algorithms/PPCOR/runPPCOR.R', #'/bin/sh -c \"pwd && ls -lah'
-                        inputPath, outPath, '\"']) #for singularity
+                        '/data/' + str(outDir) + 'time.txt',
+                        'Rscript /data/Algorithms/PPCOR/runPPCOR.R',
+                        inputPath, outPath, '\"']) # for singularity
 
-    print(cmdToRun)
+    print("The command to run is:...")
+    print(cmdToRun.strip())
     os.system(cmdToRun)
 
 

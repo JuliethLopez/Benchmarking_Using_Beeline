@@ -34,33 +34,43 @@ theme_set(theme_cowplot())
 # set random seed for reproducibility
 set.seed(12345)
 
-# optionally enable multithreading
-enableWGCNAThreads(nThreads = 8)
-
-
 # Read input arguments
 args <- commandArgs(trailingOnly = T)
-inFile <- args[1]
-outFile <-  args[2]
+inFile <- paste0("/",args[1])
+outFile <-  paste0("/",args[2])
+nThreads <- as.numeric(args[3])
 
-print(inFile)
-print(outFile)
+print(paste0("inFile:", inFile))
+print(paste0("outFile:", outFile))
+print(paste0("nThreads:", nThreads))
+
+# optionally enable multithreading
+enableWGCNAThreads(nThreads = nThreads)
+
 outdir <- file.path(dirname(outFile), "plots")
-if(!dir.exists(outdir)) dir.create(outdir)
+if(!dir.exists(outdir)) dir.create(outdir, recursive = TRUE)
 print(paste0("outdir:", outdir))
 
 # Add TOM folder
 outdir_TOM <- file.path(dirname(outFile), "TOM")
-if(!dir.exists(outdir_TOM)) dir.create(outdir_TOM)
+if(!dir.exists(outdir_TOM)) dir.create(outdir_TOM, recursive = TRUE)
+print(paste0("TOM folder:", outdir_TOM))
 
 # input expression data
-inputExpr <- read.table(inFile, sep=",", header = 1, row.names = 1)
-print(inputExpr[1:5,1:5])
+#print("Prove locations!")
+#getwd()
+#list.files("/data/inputs/example/GSD/TF_hdWGCNA")
+#list.files("data/inputs/example/GSD/TF_hdWGCNA")
 
+inputExpr <- read.csv(inFile,row.names = 1,check.names = FALSE) # first column = gene names
 inputExpr <- as.matrix(inputExpr)
+print(class(inputExpr[1:5,1:5]))
+print(dim(inputExpr))# 19   2000
 
-#geneNames <- rownames(inputExpr)
-#rownames(inputExpr) <- c(geneNames)
+geneNames <- rownames(inputExpr)
+rownames(inputExpr) <- c(geneNames)
+print("gene names set")
+print(head(geneNames)[1:5])
 
 # read as seurat
 seurat_object <- CreateSeuratObject(counts = inputExpr, project = "GSD", min.cells = 0, min.features = 0)
@@ -162,7 +172,8 @@ seurat_obj <- ConstructNetwork(
   seurat_obj,
   soft_power = 10,
   tom_name = 'GSD2_non_metacell', # name of the topoligical overlap matrix written to disk
-  overwrite_tom = TRUE
+  overwrite_tom = TRUE,
+  tom_outdir = outdir_TOM
 )
 
 # get TOM (tarda mucho. Es necesario despues, pero por ahora se puede seguir sin extraerla del objeto seurat)

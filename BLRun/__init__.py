@@ -168,6 +168,7 @@ class ConfigParser(object):
                 datasets,
                 ConfigParser.__parse_algorithms(
                 input_settings_map['algorithms']))
+                
 
 
     @staticmethod

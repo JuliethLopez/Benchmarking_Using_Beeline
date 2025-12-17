@@ -66,13 +66,13 @@ def run(RunnerObj):
 
     # Get path for ExpressionData.csv generated in INFERELATOR folder for certain type of network in inputs
     #tambien llamado en otros cuadernos inputPath
-    expressionDataPath = "INFERELATOR/ExpressionData.tsv"
+    expressionDataPath = f"/{inputDir}/INFERELATOR/ExpressionData.tsv"
 
     # Get path for refNetwork.tsv generated in INFERELATOR folder for certain type of network in inputs
-    refNetworkPath = "INFERELATOR/refNetwork.tsv"
+    refNetworkPath = f"/{inputDir}/INFERELATOR/refNetwork.tsv"
     
     # Get path for refNetwork_TF.tsv generated in INFERELATOR folder for certain type of network in inputs
-    refNetworkTFPath = "INFERELATOR/refNetwork_TF.tsv"
+    refNetworkTFPath = f"/{inputDir}/INFERELATOR/refNetwork_TF.tsv"
 
     # make output dirs if they do not exist:
     outDir = "data/outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/INFERELATOR/"
@@ -81,22 +81,38 @@ def run(RunnerObj):
     outPath = outDir + 'figure_5a_shuffled/random_seed_42/network.tsv.gz'
     
     # Command to run INFERELATOR
-    cmdToRun = ' '.join([
-        'docker run --rm -v',
-        str(Path.cwd()) + ':/data',
-        'inferelator:base',
-        '/bin/sh -c \"time -v -o',
-        'data/' + str(outDir) + 'time.txt',
-        'conda run -n inferenv python runINFERELATOR.py',
-        '--input_dir=' + inputDir,
-        '--expression_file=' + expressionDataPath,
-        '--ref_net_file=' + refNetworkPath,
-        '--ref_net_tf_names=' + refNetworkTFPath,
-        '--priori_net_file=' + refNetworkPath,
-        '--output_dir=' + outDir,
-        '--out_file=' + outPath, '\"'])
-        #'> data/' + str(outDir) + 'console_output.txt 2>&1\"'])
+    #cmdToRun = ' '.join([
+    #    'docker run --rm -v',
+    #    str(Path.cwd()) + ':/data',
+    #    'inferelator:base',
+    #    '/bin/sh -c \"time -v -o',
+    #    'data/' + str(outDir) + 'time.txt',
+    #    'conda run -n inferenv python runINFERELATOR.py',
+    #    '--input_dir=' + inputDir,
+    #    '--expression_file=' + expressionDataPath,
+    #    '--ref_net_file=' + refNetworkPath,
+    #    '--ref_net_tf_names=' + refNetworkTFPath,
+    #    '--priori_net_file=' + refNetworkPath,
+    #    '--output_dir=' + outDir,
+    #    '--out_file=' + outPath, '\"'])
+    #    #'> data/' + str(outDir) + 'console_output.txt 2>&1\"'])
 
+    cmdToRun = (
+        "/software/singularity/3.11.4/bin/singularity exec --cleanenv "
+        f"-B {str(Path.cwd())}:/data "
+        f"{str(Path.cwd())}/Algorithms/INFERELATOR/inferelator_1.0.sif "
+        f'/bin/sh -c \"'
+        f"time -v -o /{outDir}time.txt "
+        f"conda run -n inferenv python "
+        f"/data/Algorithms/INFERELATOR/runINFERELATOR.py "
+        f"--input_dir={inputDir} "
+        f"--expression_file={expressionDataPath} "
+        f"--ref_net_file={refNetworkPath} "
+        f"--ref_net_tf_names={refNetworkTFPath} "
+        f"--priori_net_file={refNetworkPath} "
+        f"--output_dir={outDir}"
+        "\""
+    )
                         
     print(cmdToRun)
     os.system(cmdToRun)
@@ -142,4 +158,3 @@ def parseOutput(RunnerObj):
         # Formats the outFile into a ranked edgelist tab separated file
         outFile = OutDF[["regulator", "target", "model_coefficient"]]
         outFile.columns = ['Gene1','Gene2','EdgeWeight']
-        outFile.to_csv(f'{outDir}/rankedEdges.csv', sep='\t', index=False)

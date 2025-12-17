@@ -36,7 +36,7 @@ def run(RunnerObj):
     #                     "data/" + str(outDir) + 'time.txt', 'julia runPIDC.jl',
     #                     inputPath, outPath, '\"'])
     
-    cmdToRun = ' '.join(['/software/spack_environments/default/00/opt/spack/linux-ubuntu22.04-x86_64_v3/gcc-13.1.0/singularityce-4.1.0-wmywvbn7r2vl5opbrcibxvtcjxhtwojh/bin/singularity exec -B',
+    cmdToRun = ' '.join(['/software/singularity/3.11.4//bin/singularity exec -B',
                         str(Path.cwd()) + ':/data/',
                         str(Path.cwd() / 'Algorithms/PIDC/pidc_1.0.sif'),
                         '/bin/sh -c \"time -v -o',

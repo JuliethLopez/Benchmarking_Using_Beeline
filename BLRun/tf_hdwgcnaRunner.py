@@ -5,7 +5,7 @@ import numpy as np
 
 def generateInputs(RunnerObj):
     '''
-    Function to generate desired inputs for INFERELATOR.
+    Function to generate desired inputs for TF_hdWGCNA.
     If the folder/files under RunnerObj.datadir exist, 
     this function will not do anything.
 
@@ -26,7 +26,7 @@ def generateInputs(RunnerObj):
 
 def run(RunnerObj):
     '''
-    Function to run INFERELATOR algorithm
+    Function to run TF_hdWGCNA algorithm
 
     :param RunnerObj: An instance of the :class:`BLRun`
     '''
@@ -46,20 +46,24 @@ def run(RunnerObj):
     #                     'Rscript runTF_hdWGCNA.R',
     #                     inputPath, 
     #                     outPath, '\"'])
-    cmdToRun = ' '.join(['/software/spack_environments/default/00/opt/spack/linux-ubuntu22.04-x86_64_v3/gcc-13.1.0/singularityce-4.1.0-wmywvbn7r2vl5opbrcibxvtcjxhtwojh/bin/singularity exec --cleanenv -B',
-                        str(Path.cwd()) + ':/data/',
+
+    nThreads = RunnerObj.params['nThreads']
+    cmdToRun = ' '.join(['/software/singularity/3.11.4//bin/singularity exec --cleanenv -B',
+                        str(Path.cwd()) + ':/data',
                         str(Path.cwd() / 'Algorithms/TF_hdWGCNA/tf_hdwgcna_1.0.sif'),
+                        #'/bin/sh -c "echo OK > /data/'+ str(outDir) +'test2.txt"'
                         '/bin/sh -c \"time -v -o',
-                        "/data/" + str(outDir) + 'time.txt',
-                        'python /data/Algorithms/TF_hdWGCNA/runTF_hdWGCNA.py',
-                        '--inFile='+inputPath, '--outFile='+outPath, '\"']) #for singularity
+                        '/data/' + str(outDir) + 'time.txt',
+                        'Rscript /data/Algorithms/TF_hdWGCNA/runTF_hdWGCNA.R',
+                        inputPath, outPath, nThreads, '\"']) # for singularity
+
     print(cmdToRun)
     os.system(cmdToRun)
 
 
 def parseOutput(RunnerObj):
     '''
-    Function to parse outputs from INFERELATOR.
+    Function to parse outputs from TF_hdWGCNA
 
     :param RunnerObj: An instance of the :class:`BLRun`
     '''
