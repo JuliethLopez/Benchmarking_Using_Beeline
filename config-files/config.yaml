@@ -42,7 +42,7 @@ input_settings:
               
         - name: "PIDC"
           params: 
-              should_run: [False] #True
+              should_run: [True] #True
 
 
         - name: "GRNVBEM"
@@ -59,12 +59,12 @@ input_settings:
               
         - name: "GRNBOOST2"
           params: 
-              should_run: [False] #True
+              should_run: [True] #True
               
               
         - name: "PPCOR"
           params: 
-              should_run: [False] #True
+              should_run: [True] #True
               # p-value cutoff
               # Used in parsing output
               pVal: [0.01]
@@ -152,7 +152,7 @@ input_settings:
               
         - name: "TF_hdWGCNA"
           params:
-              should_run: [False] #True
+              should_run: [True] #True
               # number of threads to use
               nThreads: ["64"]
 

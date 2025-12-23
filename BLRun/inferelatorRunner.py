@@ -62,23 +62,26 @@ def run(RunnerObj):
     '''
     
     #Input directory
-    inputDir= "data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1]
+    #container_inputDir = f"/data/inputs/{input_subdir}"
+    inputDir= "/data" + str(RunnerObj.inputDir).split(str(Path.cwd()))[1]
 
     # Get path for ExpressionData.csv generated in INFERELATOR folder for certain type of network in inputs
     #tambien llamado en otros cuadernos inputPath
-    expressionDataPath = f"/{inputDir}/INFERELATOR/ExpressionData.tsv"
+    expressionDataPath = f"{inputDir}/INFERELATOR/ExpressionData.tsv"
 
     # Get path for refNetwork.tsv generated in INFERELATOR folder for certain type of network in inputs
-    refNetworkPath = f"/{inputDir}/INFERELATOR/refNetwork.tsv"
+    refNetworkPath = f"{inputDir}/INFERELATOR/refNetwork.tsv"
     
     # Get path for refNetwork_TF.tsv generated in INFERELATOR folder for certain type of network in inputs
-    refNetworkTFPath = f"/{inputDir}/INFERELATOR/refNetwork_TF.tsv"
+    refNetworkTFPath = f"{inputDir}/INFERELATOR/refNetwork_TF.tsv"
 
     # make output dirs if they do not exist:
     outDir = "data/outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/INFERELATOR/"
     os.makedirs(outDir, exist_ok = True)
     
-    outPath = outDir + 'figure_5a_shuffled/random_seed_42/network.tsv.gz'
+    #output_dir = "/" + outDir
+
+    outPath =  outDir + "figure_5a_shuffled/random_seed_42/network.tsv.gz"
     
     # Command to run INFERELATOR
     #cmdToRun = ' '.join([
@@ -110,7 +113,8 @@ def run(RunnerObj):
         f"--ref_net_file={refNetworkPath} "
         f"--ref_net_tf_names={refNetworkTFPath} "
         f"--priori_net_file={refNetworkPath} "
-        f"--output_dir={outDir}"
+        f"--output_dir=/{outDir} "
+        f"--out_file=/{outPath}"
         "\""
     )
                         
@@ -129,18 +133,20 @@ def parseOutput(RunnerObj):
     # Quit if output directory does not exist
         # Build base output path
     input_subdir = str(RunnerObj.inputDir).split("inputs/")[1]
-    outDir = Path("outputs") / input_subdir / "INFERELATOR"
+    outDir = str(Path("outputs") / input_subdir / "INFERELATOR")
     print("Output directory for INFERELATOR:", outDir)
 
     # Create full nested folder structure
-    finalDir = outDir / "figure_5a_shuffled" / "random_seed_42"
+    finalDir = Path(outDir) / "figure_5a_shuffled" / "random_seed_42"
     if not finalDir.exists():
         print("Creating full folder path for INFERELATOR output...")
         finalDir.mkdir(parents=True, exist_ok=False)  # creates all intermediate dirs
 
     print("Final output directory for INFERELATOR:", finalDir)
 
-    out_file = finalDir / 'network.tsv.gz'
+    out_file = Path(finalDir) / "network.tsv.gz"
+
+    print("Outfile path:", out_file)
 
     if not out_file.exists():
         print(f"{out_file} does not exist, skipping...")
@@ -158,3 +164,4 @@ def parseOutput(RunnerObj):
         # Formats the outFile into a ranked edgelist tab separated file
         outFile = OutDF[["regulator", "target", "model_coefficient"]]
         outFile.columns = ['Gene1','Gene2','EdgeWeight']
+        outFile.to_csv(f'{outDir}/rankedEdges.csv', sep='\t', index=False)
