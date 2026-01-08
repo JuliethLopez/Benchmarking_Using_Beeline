@@ -149,12 +149,21 @@ input_settings:
         - name: "INFERELATOR"
           params:
               should_run: [True] #True
+              num_bootstraps: [2]
+              count_minimum: [0.05]
+              random_seed_min: [42]
+              random_seed_max: [43]
               
         - name: "TF_hdWGCNA"
           params:
               should_run: [True] #True
               # number of threads to use
-              nThreads: ["64"]
+              nThreads: [64]
+              nVariableFeatures: [2000]
+              clustering_resolution: [0.5]
+              metacells_k: [5] # nearest-neighbors parameter in MetacellsByGroups fuction
+              networkType: ["signed"] # WGCNA network type in TestSoftPowers function
+              soft_power: [10] # WGCNA soft-thresholding power in ConstructNetwork function
 
 # Output Settings: initialize base output folder names
 output_settings:

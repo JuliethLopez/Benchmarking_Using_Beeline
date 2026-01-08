@@ -83,6 +83,11 @@ def run(RunnerObj):
 
     outPath =  outDir + "figure_5a_shuffled/random_seed_42/network.tsv.gz"
     
+    num_bootstraps = int(RunnerObj.params['num_bootstraps'])
+    count_minimum = float(RunnerObj.params['count_minimum'])
+    random_seed_min = int(RunnerObj.params['random_seed_min'])
+    random_seed_max = int(RunnerObj.params['random_seed_max'])
+
     # Command to run INFERELATOR
     #cmdToRun = ' '.join([
     #    'docker run --rm -v',
@@ -115,6 +120,10 @@ def run(RunnerObj):
         f"--priori_net_file={refNetworkPath} "
         f"--output_dir=/{outDir} "
         f"--out_file=/{outPath}"
+        f"--num_bootstraps={num_bootstraps}"
+        f"--count_minimum={count_minimum}"
+        f"--random_seed_min={random_seed_min}"
+        f"--random_seed_max={random_seed_max}"
         "\""
     )
                         

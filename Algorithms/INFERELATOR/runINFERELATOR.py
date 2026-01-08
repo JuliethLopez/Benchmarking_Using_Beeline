@@ -19,7 +19,7 @@ import argparse
 import pandas as pd #to load read GSD dataset
 import numpy as np
 import sys
-print(sys.path) #julieth
+#print(sys.path)
 sys.path.append('INFERELATOR') #to add a path to search for the requested module
 
 from inferelator import inferelator_workflow, inferelator_verbose_level, MPControl, CrossValidationManager
@@ -49,7 +49,15 @@ def get_parser() -> argparse.ArgumentParser:
         help='Path to priors file, if available. If not, set to None or refNetwork file')
     parser.add_argument('--out_file',
         help='Path to output file')
-    
+    parser.add_argument('--num_bootstraps', type=int, default=2,
+        help='Number of bootstraps for cross-validation')
+    parser.add_argument('--count_minimum', type=float, default=0.05,
+        help='Minimum count threshold for filtering genes')
+    parser.add_argument('--random_seed_min', type=int, default=42,
+        help='Minimum random seed for grid search')
+    parser.add_argument('--random_seed_max', type=int, default=43,
+        help='Maximum random seed for grid search')
+
     return parser
 
 def parse_arguments():
@@ -88,15 +96,18 @@ def set_up_workflow(args):
     #                        gene_list_index="SystematicName")
     wkf.set_crossvalidation_parameters(split_gold_standard_for_crossvalidation=True,
                                        cv_split_ratio=0.5)
-    wkf.set_run_parameters(num_bootstraps=2)
-    wkf.set_count_minimum(0.05)
+    wkf.set_run_parameters(num_bootstraps=opts.num_bootstraps)
+    wkf.set_count_minimum(opts.count_minimum)
     wkf.add_preprocess_step("log2")
     return wkf
 
 
 def set_up_fig5a(wkf):
+    opts = parse_arguments()
+    print(opts)
+    
     cv_wrap = CrossValidationManager(wkf)
-    cv_wrap.add_gridsearch_parameter('random_seed', list(range(42, 43)))
+    cv_wrap.add_gridsearch_parameter('random_seed', list(range(opts.random_seed_min, opts.random_seed_max)))
     return cv_wrap
 
 def main(args):
@@ -104,11 +115,11 @@ def main(args):
     print(f"Running in CWD: {os.getcwd()}")
     print("using args:")
     print(args)
-    print(os.system("ls -lah"))
-    print(os.system("ls /"))
-    print(os.system("find / -name \"ExpressionData.tsv\" 2>/dev/null"))
+    #print(os.system("ls -lah"))
+    #print(os.system("ls /"))
+    #print(os.system("find / -name \"ExpressionData.tsv\" 2>/dev/null"))
     opts = parse_arguments()
-    print(opts) #julieth
+    print(opts)
 
     # create the output dir if the output directory does not exist
     if not os.path.exists(opts.output_dir):

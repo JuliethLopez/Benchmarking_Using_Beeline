@@ -39,10 +39,20 @@ args <- commandArgs(trailingOnly = T)
 inFile <- paste0("/",args[1])
 outFile <-  paste0("/",args[2])
 nThreads <- as.numeric(args[3])
+nVariableFeatures <- as.numeric(args[4])
+clustering_resolution <- as.numeric(args[5])
+metacells_k <- as.numeric(args[6])
+networkType <- args[7]
+soft_power <- as.numeric(args[8])
 
 print(paste0("inFile:", inFile))
 print(paste0("outFile:", outFile))
 print(paste0("nThreads:", nThreads))
+print(paste0("nVariableFeatures:", nVariableFeatures))
+print(paste0("clustering_resolution:", clustering_resolution))
+print(paste0("metacells_k:", metacells_k))
+print(paste0("networkType:", networkType))
+print(paste0("soft_power:", soft_power))
 
 # optionally enable multithreading
 enableWGCNAThreads(nThreads = nThreads)
@@ -64,6 +74,7 @@ print(paste0("TOM folder:", outdir_TOM))
 
 inputExpr <- read.csv(inFile,row.names = 1,check.names = FALSE) # first column = gene names
 inputExpr <- as.matrix(inputExpr)
+print("Gene expression data successfully readed")
 print(class(inputExpr[1:5,1:5]))
 print(dim(inputExpr))# 19   2000
 
@@ -78,7 +89,7 @@ seurat_object
 
 # preprocesing
 seurat_object@assays$RNA$data = seurat_object@assays$RNA$counts
-seurat_object <- FindVariableFeatures(seurat_object, selection.method = "vst", nfeatures = 2000)
+seurat_object <- FindVariableFeatures(seurat_object, selection.method = "vst", nfeatures = nVariableFeatures)
 
 # plot variable features with and without labels
 plot1 <- VariableFeaturePlot(seurat_object)
@@ -97,9 +108,11 @@ ggsave(file.path(outdir, "UMAP.png"), plot3)
 
 # clustering
 seurat_object <- FindNeighbors(seurat_object, dims = 1:10)
-seurat_object <- FindClusters(seurat_object, resolution = 0.5)
+seurat_object <- FindClusters(seurat_object, resolution = clustering_resolution)
 
-plot4 <- DimPlot(seurat_object, reduction = "umap", group.by = "RNA_snn_res.0.5")
+metacells_variable_group_by <- paste0("RNA_snn_res.", clustering_resolution)
+
+plot4 <- DimPlot(seurat_object, reduction = "umap", group.by = metacells_variable_group_by)
 ggsave(file.path(outdir, "UMAP_clustering.png"), plot4)
 
 # genes expresados en al menos el 5% de las células
@@ -114,16 +127,16 @@ seurat_obj <- SetupForWGCNA(
 # metacells
 seurat_obj <- MetacellsByGroups(
   seurat_obj = seurat_obj,
-  group.by = c("RNA_snn_res.0.5"), # specify the columns in seurat_obj@meta.data to group by
+  group.by = c(metacells_variable_group_by), # specify the columns in seurat_obj@meta.data to group by
   reduction = 'pca', # select the dimensionality reduction to perform KNN on
-  k = 5, # nearest-neighbors parameter
+  k = metacells_k, # nearest-neighbors parameter
   max_shared = 2, # maximum number of shared cells between two metacells
-  ident.group = 'RNA_snn_res.0.5' # set the Idents of the metacell seurat object
+  ident.group = metacells_variable_group_by # set the Idents of the metacell seurat object
 )
 
 # normalize metacell expression matrix:
 seurat_obj <- NormalizeMetacells(seurat_obj)
-cell_types <- unique(seurat_obj@misc$tutorial$wgcna_metacell_obj@meta.data$RNA_snn_res.0.5)
+cell_types <- unique(seurat_obj@misc$tutorial$wgcna_metacell_obj@meta.data[[metacells_variable_group_by]])
 
 seurat_obj <- ScaleMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
 seurat_obj <- RunPCAMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
@@ -137,14 +150,18 @@ ggsave(filename = file.path(outdir,"pca_metacells.png") , plot=plot_pca)
 #run dimensional reduction on metacells
 seurat_obj <- RunUMAPMetacells(seurat_obj, reduction='pca', dims=1:15)
 
-umap_mc <- DimPlotMetacells(seurat_obj, group.by='RNA_snn_res.0.5') + umap_theme() + ggtitle("Cell Type Metacells")
+umap_mc <- DimPlotMetacells(seurat_obj, group.by=metacells_variable_group_by) + umap_theme() + ggtitle("Cell Type Metacells")
 ggsave(file.path(outdir,"UMAP_metacells.png"),umap_mc)
 
 # with metacells
+print(paste("Metadata group by:", metacells_variable_group_by))
+print(head(seurat_obj@meta.data[metacells_variable_group_by]))
+print(paste("Group names:", cell_types))
+print(cell_types)
 seurat_obj <- SetDatExpr(
   seurat_obj,
   group_name = cell_types, # the name of the group of interest in the group.by column
-  group.by='RNA_snn_res.0.5', # the metadata column containing the cell type info. This same column should have also been used in MetacellsByGroups
+  group.by = metacells_variable_group_by, # the metadata column containing the cell type info. This same column should have also been used in MetacellsByGroups
   assay = 'RNA', # using RNA assay
   layer = 'data' # using normalized data
 )
@@ -153,7 +170,7 @@ seurat_obj <- SetDatExpr(
 # Test different soft powers:
 seurat_obj <- TestSoftPowers(
   seurat_obj,
-  networkType = 'signed' # you can also use "unsigned" or "signed hybrid"
+  networkType = networkType # it is possible to use "signed", "unsigned" or "signed hybrid"
 )
 
 # plot the results:
@@ -170,14 +187,13 @@ write_csv2(power_table, file = file.path(outdir,"power_table.csv"))
 # construct co-expression network:
 seurat_obj <- ConstructNetwork(
   seurat_obj,
-  soft_power = 10,
+  soft_power = soft_power,
   tom_name = 'GSD2_non_metacell', # name of the topoligical overlap matrix written to disk
   overwrite_tom = TRUE,
   tom_outdir = outdir_TOM
 )
 
-# get TOM (tarda mucho. Es necesario despues, pero por ahora se puede seguir sin extraerla del objeto seurat)
-# mirar bien donde se guarda
+# get TOM (tarda bastante tiempo)
 #TOM <- GetTOM(seurat_obj)
 
 png(file.path(outdir, "Dendogram_GSD2_non_metacell.png"))
@@ -225,9 +241,9 @@ genes_use <- c(tf_genes, nongrey_genes)
 
 # update the gene list and re-run SetDatExpr
 seurat_obj_filter <- SetWGCNAGenes(seurat_obj, genes_use)
-seurat_obj_filter <- SetDatExpr(seurat_obj_filter) # group.by = 'cell_type', group_name='EX'
+seurat_obj_filter <- SetDatExpr(seurat_obj_filter) # Also can be added group.by = 'cell_type', group_name='EX'
 
-# define model params:
+# define model params, this are used for XGBoost
 model_params <- list(
   objective = 'reg:squarederror',
   max_depth = 1,

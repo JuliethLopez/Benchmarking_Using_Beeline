@@ -38,6 +38,14 @@ def run(RunnerObj):
     os.makedirs(outDir, exist_ok = True)
     
     outPath =  "data/" + str(outDir) + 'outFile.txt'
+
+    nThreads = str(RunnerObj.params['nThreads'])
+    nVariableFeatures = str(RunnerObj.params['nVariableFeatures'])
+    clustering_resolution = str(RunnerObj.params['clustering_resolution'])
+    metacells_k = str(RunnerObj.params['metacells_k'])
+    networkType = str(RunnerObj.params['networkType'])
+    soft_power = str(RunnerObj.params['soft_power'])
+
     #cmdToRun = ' '.join(['docker run --rm -v', 
     #                     str(Path.cwd())+':/data/',  # <-- add the missing space and slash
     #                     'tf_hdwgcna:base',          # <-- image name as a separate argument
@@ -47,7 +55,6 @@ def run(RunnerObj):
     #                     inputPath, 
     #                     outPath, '\"'])
 
-    nThreads = RunnerObj.params['nThreads']
     cmdToRun = ' '.join(['/software/singularity/3.11.4//bin/singularity exec --cleanenv -B',
                         str(Path.cwd()) + ':/data',
                         str(Path.cwd() / 'Algorithms/TF_hdWGCNA/tf_hdwgcna_1.0.sif'),
@@ -55,7 +62,8 @@ def run(RunnerObj):
                         '/bin/sh -c \"time -v -o',
                         '/data/' + str(outDir) + 'time.txt',
                         'Rscript /data/Algorithms/TF_hdWGCNA/runTF_hdWGCNA.R',
-                        inputPath, outPath, nThreads, '\"']) # for singularity
+                        inputPath, outPath, 
+                        nThreads, nVariableFeatures, clustering_resolution, metacells_k, networkType, soft_power, '\"']) # for singularity
 
     print(cmdToRun)
     os.system(cmdToRun)
