@@ -42,7 +42,7 @@ input_settings:
               
         - name: "PIDC"
           params: 
-              should_run: [True] #True
+              should_run: [False] #True
 
 
         - name: "GRNVBEM"
@@ -59,12 +59,12 @@ input_settings:
               
         - name: "GRNBOOST2"
           params: 
-              should_run: [True] #True
+              should_run: [False] #True
               
               
         - name: "PPCOR"
           params: 
-              should_run: [True] #True
+              should_run: [False] #True
               # p-value cutoff
               # Used in parsing output
               pVal: [0.01]
@@ -152,11 +152,12 @@ input_settings:
               num_bootstraps: [2]
               count_minimum: [0.05]
               random_seed_min: [42]
-              random_seed_max: [43]
+              random_seed_max: [45]
+              random_seed_selection: [42]
               
         - name: "TF_hdWGCNA"
           params:
-              should_run: [True] #True
+              should_run: [False] #True
               # number of threads to use
               nThreads: [64]
               nVariableFeatures: [2000]

@@ -57,6 +57,8 @@ def get_parser() -> argparse.ArgumentParser:
         help='Minimum random seed for grid search')
     parser.add_argument('--random_seed_max', type=int, default=43,
         help='Maximum random seed for grid search')
+    parser.add_argument('--random_seed_selection', type=int, default=42,
+        help='Random seed selection for results folder naming')
 
     return parser
 
@@ -89,12 +91,13 @@ def set_up_workflow(args):
                        gene_metadata_file=opts.gene_metadata_file_name,
                        gold_standard_file=opts.ref_net_file,
                        priors_file=opts.priori_net_file,
-                       tf_names_file=opts.ref_net_tf_names)
+                       tf_names_file=opts.ref_net_tf_names) # in this case is possible to use the reference list due to is used in the beggining to create sintetic network
+    # Set metadata columns
     #wkf.set_file_properties(extract_metadata_from_expression_matrix=True,
     #                        expression_matrix_metadata=METADATA_COLUMNS,
     #                        expression_matrix_columns_are_genes=True,
     #                        gene_list_index="SystematicName")
-    wkf.set_crossvalidation_parameters(split_gold_standard_for_crossvalidation=True,
+    wkf.set_crossvalidation_parameters(split_gold_standard_for_crossvalidation=False, #here we use all gold standard for evaluation
                                        cv_split_ratio=0.5)
     wkf.set_run_parameters(num_bootstraps=opts.num_bootstraps)
     wkf.set_count_minimum(opts.count_minimum)
@@ -102,12 +105,11 @@ def set_up_workflow(args):
     return wkf
 
 
-def set_up_fig5a(wkf):
+def cross_validation(wkf):
     opts = parse_arguments()
-    print(opts)
     
     cv_wrap = CrossValidationManager(wkf)
-    cv_wrap.add_gridsearch_parameter('random_seed', list(range(opts.random_seed_min, opts.random_seed_max)))
+    cv_wrap.add_gridsearch_parameter('random_seed', list(range(opts.random_seed_min, opts.random_seed_max))) #this affects bbotstraping resampling and priorshuffling if done
     return cv_wrap
 
 def main(args):
@@ -125,14 +127,19 @@ def main(args):
     if not os.path.exists(opts.output_dir):
         os.makedirs(opts.output_dir)
 
-    # Figure 5A: Shuffled Priors
+    # Create workflow and run without imputation
+    # without prior information, whithout shuffle prior information
+    # with cross validation evaluation using gold standard
     worker = set_up_workflow(args)
-    worker.set_shuffle_parameters(shuffle_prior_axis=0)
-    worker.append_to_path('output_dir', 'figure_5a_shuffled')
+    #worker.set_shuffle_parameters(shuffle_prior_axis=0) # shuffle prior and alter biological meaning
+    worker.set_tfa(tfa_driver=False) #not to use prior information
+    worker.append_to_path('output_dir', 'not_imputation_not_prior')
 
-    set_up_fig5a(worker).run()
+    cross_validation(worker).run()
 
-    network_output_name = f'{opts.output_dir}/figure_5a_shuffled/random_seed_42/network.tsv.gz'
+    folder_results = f"random_seed_{random_seed_selection}"
+
+    network_output_name = f'{opts.output_dir}/not_imputation_not_prior/{folder_results}/network.tsv.gz'
     network_output = pd.read_csv(network_output_name, sep='\t', index_col=None)
 
     # Select only required columns

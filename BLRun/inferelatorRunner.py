@@ -81,12 +81,15 @@ def run(RunnerObj):
     
     #output_dir = "/" + outDir
 
-    outPath =  outDir + "figure_5a_shuffled/random_seed_42/network.tsv.gz"
-    
     num_bootstraps = int(RunnerObj.params['num_bootstraps'])
     count_minimum = float(RunnerObj.params['count_minimum'])
     random_seed_min = int(RunnerObj.params['random_seed_min'])
+    random_seed_selection = int(RunnerObj.params['random_seed_selection'])
     random_seed_max = int(RunnerObj.params['random_seed_max'])
+
+    folder_results = f"random_seed_{random_seed_selection}"
+
+    outPath =  outDir + "not_imputation_not_prior/" + folder_results + "/network.tsv.gz"
 
     # Command to run INFERELATOR
     #cmdToRun = ' '.join([
@@ -119,11 +122,12 @@ def run(RunnerObj):
         f"--ref_net_tf_names={refNetworkTFPath} "
         f"--priori_net_file={refNetworkPath} "
         f"--output_dir=/{outDir} "
-        f"--out_file=/{outPath}"
-        f"--num_bootstraps={num_bootstraps}"
-        f"--count_minimum={count_minimum}"
-        f"--random_seed_min={random_seed_min}"
-        f"--random_seed_max={random_seed_max}"
+        f"--out_file=/{outPath} "
+        f"--num_bootstraps={num_bootstraps} "
+        f"--count_minimum={count_minimum} "
+        f"--random_seed_min={random_seed_min} "
+        f"--random_seed_max={random_seed_max} "
+        f"--random_seed_selection={random_seed_selection}"
         "\""
     )
                         
@@ -146,7 +150,11 @@ def parseOutput(RunnerObj):
     print("Output directory for INFERELATOR:", outDir)
 
     # Create full nested folder structure
-    finalDir = Path(outDir) / "figure_5a_shuffled" / "random_seed_42"
+    random_seed_selection = int(RunnerObj.params['random_seed_selection'])
+    
+    folder_results = f"random_seed_{random_seed_selection}"
+
+    finalDir = Path(outDir) / "not_imputation_not_prior" / folder_results
     if not finalDir.exists():
         print("Creating full folder path for INFERELATOR output...")
         finalDir.mkdir(parents=True, exist_ok=False)  # creates all intermediate dirs
