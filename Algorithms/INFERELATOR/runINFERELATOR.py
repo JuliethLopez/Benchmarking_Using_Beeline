@@ -19,6 +19,7 @@ import argparse
 import pandas as pd #to load read GSD dataset
 import numpy as np
 import sys
+from pathlib import Path
 #print(sys.path)
 sys.path.append('INFERELATOR') #to add a path to search for the requested module
 
@@ -137,9 +138,11 @@ def main(args):
 
     cross_validation(worker).run()
 
-    folder_results = f"random_seed_{random_seed_selection}"
+    folder_results = f"random_seed_{opts.random_seed_selection}"
+    final_folder = f"{opts.output_dir}/not_imputation_not_prior/{folder_results}"
+    Path(final_folder).mkdir(parents=True, exist_ok=True) #check if folder/path exist, if not creste them
 
-    network_output_name = f'{opts.output_dir}/not_imputation_not_prior/{folder_results}/network.tsv.gz'
+    network_output_name = f'{final_folder}/network.tsv.gz'
     network_output = pd.read_csv(network_output_name, sep='\t', index_col=None)
 
     # Select only required columns

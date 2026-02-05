@@ -3,7 +3,7 @@
 input_settings:
 
     # Base input directory
-    input_dir : "inputs"
+    input_dir: "inputs"
 
     # Subdirectory of inputs that datasets are placed in
     dataset_dir: "example"

@@ -42,8 +42,10 @@ nThreads <- as.numeric(args[3])
 nVariableFeatures <- as.numeric(args[4])
 clustering_resolution <- as.numeric(args[5])
 metacells_k <- as.numeric(args[6])
-networkType <- args[7]
-soft_power <- as.numeric(args[8])
+min_cells_per_metacell <- as.numeric(args[7])
+max_shared_cells <- as.numeric(args[8])
+networkType <- args[9]
+soft_power <- as.numeric(args[10])
 
 print(paste0("inFile:", inFile))
 print(paste0("outFile:", outFile))
@@ -51,6 +53,8 @@ print(paste0("nThreads:", nThreads))
 print(paste0("nVariableFeatures:", nVariableFeatures))
 print(paste0("clustering_resolution:", clustering_resolution))
 print(paste0("metacells_k:", metacells_k))
+print(paste0("min_cells_per_metacell:", min_cells_per_metacell))
+print(paste0("max_shared_cells:", max_shared_cells))
 print(paste0("networkType:", networkType))
 print(paste0("soft_power:", soft_power))
 
@@ -76,7 +80,9 @@ inputExpr <- read.csv(inFile,row.names = 1,check.names = FALSE) # first column =
 inputExpr <- as.matrix(inputExpr)
 print("Gene expression data successfully readed")
 print(class(inputExpr[1:5,1:5]))
-print(dim(inputExpr))# 19   2000
+print(dim(inputExpr))# genes x cells
+
+n_cells <- ncol(inputExpr)
 
 geneNames <- rownames(inputExpr)
 rownames(inputExpr) <- c(geneNames)
@@ -96,24 +102,40 @@ plot1 <- VariableFeaturePlot(seurat_object)
 ggsave(file.path(outdir, "VariableFeatures.png"), plot1)
 
 #all.genes <- rownames(seurat_object)
-seurat_object <- ScaleData(seurat_object, features = VariableFeatures(seurat_object))
+variable_features <- VariableFeatures(seurat_object)
+if (length(variable_features) < nVariableFeatures) {
+  print(paste0("The number of variable features found (", length(variable_features), ") is less than nVariableFeatures (", nVariableFeatures, "). Using all available variable features."))
+  variable_features <- rownames(seurat_object)
+}
+seurat_object <- ScaleData(seurat_object, features = variable_features)
 
-seurat_object <- RunPCA(seurat_object, features = VariableFeatures(seurat_object))
+# Run PCA
+seurat_object <- RunPCA(seurat_object, features = variable_features)
 plot2 <- DimPlot(seurat_object, reduction = "pca") + NoLegend()
 ggsave(file.path(outdir, "PCA.png"), plot2)
 
-seurat_object <- RunUMAP(seurat_object, dims = 1:10)
+# UMAP
+n_pcs <- 10
+n_pcs_available <- ncol(seurat_object@reductions$pca@cell.embeddings)
+print(paste0("Number of PCs in the single cell seurat object: ", n_pcs_available))
+if(n_pcs_available < n_pcs){
+  print(paste0("The number of PCs available (", n_pcs_available, ") is less than ", n_pcs,". Then it will be used all available PCs."))
+  n_pcs <- n_pcs_available
+}
+seurat_object <- RunUMAP(seurat_object, dims = 1:n_pcs)
 plot3 <- DimPlot(seurat_object, reduction = "umap")
 ggsave(file.path(outdir, "UMAP.png"), plot3)
 
 # clustering
-seurat_object <- FindNeighbors(seurat_object, dims = 1:10)
+seurat_object <- FindNeighbors(seurat_object, dims = 1:n_pcs)
 seurat_object <- FindClusters(seurat_object, resolution = clustering_resolution)
 
 metacells_variable_group_by <- paste0("RNA_snn_res.", clustering_resolution)
 
+print("Saving UMAP plot with clusters")
 plot4 <- DimPlot(seurat_object, reduction = "umap", group.by = metacells_variable_group_by)
 ggsave(file.path(outdir, "UMAP_clustering.png"), plot4)
+
 
 # genes expresados en al menos el 5% de las células
 seurat_obj <- SetupForWGCNA(
@@ -125,47 +147,73 @@ seurat_obj <- SetupForWGCNA(
 
 
 # metacells
-seurat_obj <- MetacellsByGroups(
-  seurat_obj = seurat_obj,
-  group.by = c(metacells_variable_group_by), # specify the columns in seurat_obj@meta.data to group by
-  reduction = 'pca', # select the dimensionality reduction to perform KNN on
-  k = metacells_k, # nearest-neighbors parameter
-  max_shared = 2, # maximum number of shared cells between two metacells
-  ident.group = metacells_variable_group_by # set the Idents of the metacell seurat object
-)
+if(n_cells < 500){
+  paste0("The number of cells (", n_cells, ") is less than 500. Metacells may not be reliable with low cell numbers, so metacells will not be calculated.")
+} else {
+  print("Creating metacells per cluster")
+  seurat_obj <- MetacellsByGroups(
+    seurat_obj = seurat_obj,
+    group.by = c(metacells_variable_group_by), # specify the columns in seurat_obj@meta.data to group by
+    reduction = 'pca', # select the dimensionality reduction to perform KNN on
+    k = metacells_k, # nearest-neighbors parameter. 25 by default in the fuction
+    max_shared = max_shared_cells, # maximum number of shared cells between two metacells. 15 by default in the function
+    min_cells = min_cells_per_metacell, # minimum number of cells in group to construct metacell. 100 by default in the function
+    ident.group = metacells_variable_group_by # set the Idents of the metacell seurat object
+  )
 
-# normalize metacell expression matrix:
-seurat_obj <- NormalizeMetacells(seurat_obj)
-cell_types <- unique(seurat_obj@misc$tutorial$wgcna_metacell_obj@meta.data[[metacells_variable_group_by]])
+  # normalize metacell expression matrix:
+  seurat_obj <- NormalizeMetacells(seurat_obj)
+  cell_types <- unique(seurat_obj@misc$tutorial$wgcna_metacell_obj@meta.data[[metacells_variable_group_by]])
 
-seurat_obj <- ScaleMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
-seurat_obj <- RunPCAMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
+  seurat_obj <- ScaleMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
+  seurat_obj <- RunPCAMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
 
-plot_pca <- DimPlotMetacells(seurat_obj, reduction="pca")
-ggsave(filename = file.path(outdir,"pca_metacells.png") , plot=plot_pca)
+  print("Saving PCA plot with metacells")
+  plot_pca <- DimPlotMetacells(seurat_obj, reduction="pca")
+  ggsave(filename = file.path(outdir,"pca_metacells.png") , plot=plot_pca)
 
-#not necessary
-#seurat_obj <- RunHarmonyMetacells(seurat_obj, group.by.vars='orig.ident')
+  #not necessary
+  #seurat_obj <- RunHarmonyMetacells(seurat_obj, group.by.vars='orig.ident')
 
-#run dimensional reduction on metacells
-seurat_obj <- RunUMAPMetacells(seurat_obj, reduction='pca', dims=1:15)
+  print("Metacells object summary:")
+  print(seurat_obj)
+  print(seurat_obj@reductions$pca)
 
-umap_mc <- DimPlotMetacells(seurat_obj, group.by=metacells_variable_group_by) + umap_theme() + ggtitle("Cell Type Metacells")
-ggsave(file.path(outdir,"UMAP_metacells.png"),umap_mc)
+  #run dimensional reduction on metacells
+  n_pcs_metacells <- 15
+  n_pcs_metacells_available <- ncol(seurat_obj@reductions$pca@cell.embeddings)
+  print(paste0("Number of PCs in the metacells seurat object: ", n_pcs_metacells_available))
+  if(n_pcs_metacells_available < n_pcs_metacells){
+    print(paste0("The number of PCs available (", n_pcs_metacells_available, ") is less than ", n_pcs_metacells,". Then it will be used all available PCs."))
+    n_pcs_metacells <- n_pcs_metacells_available
+  }
+  # Run UMAP on metacells
+  # print("Running UMAP on metacells")
+  # X <- Embeddings(seurat_obj, reduction = "pca")
+  # dim(X)
+  # n_dim <- ncol(X)
+  # if(n_dim < 30){
+  #   print(paste0("The number of PCs (", n_dim, ") is less than 30. Setting n.neighbors to min(5,", n_dim - 1,")"))
+  # }
+  seurat_obj <- RunUMAPMetacells(seurat_obj, reduction='pca', dims=1:n_pcs_metacells) #   n.neighbors = min(5, n_dim - 1))
 
-# with metacells
-print(paste("Metadata group by:", metacells_variable_group_by))
-print(head(seurat_obj@meta.data[metacells_variable_group_by]))
-print(paste("Group names:", cell_types))
-print(cell_types)
-seurat_obj <- SetDatExpr(
-  seurat_obj,
-  group_name = cell_types, # the name of the group of interest in the group.by column
-  group.by = metacells_variable_group_by, # the metadata column containing the cell type info. This same column should have also been used in MetacellsByGroups
-  assay = 'RNA', # using RNA assay
-  layer = 'data' # using normalized data
-)
+  umap_mc <- DimPlotMetacells(seurat_obj, group.by=metacells_variable_group_by) + umap_theme() + ggtitle("Cell Type Metacells")
+  ggsave(file.path(outdir,"UMAP_metacells.png"),umap_mc)
 
+  # COnfig matrix of co-expression with metacells
+  print(paste("Metadata group by:", metacells_variable_group_by))
+  print(head(seurat_obj@meta.data[metacells_variable_group_by]))
+  print(paste("Group names:", cell_types))
+  print(cell_types)
+  seurat_obj <- SetDatExpr(
+    seurat_obj,
+    group_name = cell_types, # the name of the group of interest in the group.by column
+    group.by = metacells_variable_group_by, # the metadata column containing the cell type info. This same column should have also been used in MetacellsByGroups
+    assay = 'RNA', # using RNA assay
+    layer = 'data' # using normalized data
+  )
+
+}
 
 # Test different soft powers:
 seurat_obj <- TestSoftPowers(
@@ -188,7 +236,7 @@ write_csv2(power_table, file = file.path(outdir,"power_table.csv"))
 seurat_obj <- ConstructNetwork(
   seurat_obj,
   soft_power = soft_power,
-  tom_name = 'GSD2_non_metacell', # name of the topoligical overlap matrix written to disk
+  tom_name = 'tom_metacells', # name of the topoligical overlap matrix written to disk
   overwrite_tom = TRUE,
   tom_outdir = outdir_TOM
 )
@@ -196,8 +244,9 @@ seurat_obj <- ConstructNetwork(
 # get TOM (tarda bastante tiempo)
 #TOM <- GetTOM(seurat_obj)
 
-png(file.path(outdir, "Dendogram_GSD2_non_metacell.png"))
-PlotDendrogram(seurat_obj, main='INH hdWGCNA Dendrogram')
+# PLot dendrogram
+png(file.path(outdir, "Dendogram_tom_metacells.png"))
+PlotDendrogram(seurat_obj, main='hdWGCNA Dendrogram')
 dev.off()
 
 # Identify TFs in genes promoter regions (algorithm MotifScan)
@@ -214,7 +263,7 @@ pfm_core <- TFBSTools::getMatrixSet(
 # run the motif scan using: TF and binding sites from curated data base, our exiting data (genes + TF)
 # Extract promoter sequencing from EnsDb
 # Scan those sequences to detect motives from pfm
-# delever matric with moptif per gene and targets per TF
+# delever metric with moptif per gene and targets per TF
 seurat_obj <- MotifScan(
   seurat_obj,
   species_genome = 'hg38',
@@ -223,12 +272,12 @@ seurat_obj <- MotifScan(
 )
 
 
-# COnstruct the nextwork TF_hdWGCNA
+# Construct the nextwork TF_hdWGCNA
 # https://smorabit.github.io/hdWGCNA/articles/tf_network.html
 
 # get the motif df
 motif_df <- GetMotifs(seurat_obj)
-write_csv2(motif_df, file = file.path(outdir,"motifs_df_non_metacell.csv"))
+write_csv2(motif_df, file = file.path(outdir,"motifs_df.csv"))
 
 # keep all TFs, and then remove all genes from the grey module
 tf_genes <- unique(motif_df$gene_name)

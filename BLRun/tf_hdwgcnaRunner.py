@@ -43,6 +43,8 @@ def run(RunnerObj):
     nVariableFeatures = str(RunnerObj.params['nVariableFeatures'])
     clustering_resolution = str(RunnerObj.params['clustering_resolution'])
     metacells_k = str(RunnerObj.params['metacells_k'])
+    min_cells_per_metacell = str(RunnerObj.params['min_cells_per_metacell'])
+    max_shared_cells = str(RunnerObj.params['max_shared_cells'])
     networkType = str(RunnerObj.params['networkType'])
     soft_power = str(RunnerObj.params['soft_power'])
 
@@ -63,7 +65,7 @@ def run(RunnerObj):
                         '/data/' + str(outDir) + 'time.txt',
                         'Rscript /data/Algorithms/TF_hdWGCNA/runTF_hdWGCNA.R',
                         inputPath, outPath, 
-                        nThreads, nVariableFeatures, clustering_resolution, metacells_k, networkType, soft_power, '\"']) # for singularity
+                        nThreads, nVariableFeatures, clustering_resolution, metacells_k, min_cells_per_metacell, max_shared_cells, networkType, soft_power, '\"']) # for singularity
 
     print(cmdToRun)
     os.system(cmdToRun)
