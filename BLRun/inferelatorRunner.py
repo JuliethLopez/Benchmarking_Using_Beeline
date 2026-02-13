@@ -89,7 +89,16 @@ def run(RunnerObj):
 
     folder_results = f"random_seed_{random_seed_selection}"
 
-    outPath =  outDir + "not_imputation_not_prior/" + folder_results + "/network.tsv.gz"
+    folder_results = f"random_seed_{random_seed_selection}"
+
+    #outPath =  outDir + "not_imputation_not_prior/" + folder_results + "/network.tsv.gz"
+
+    # Create the nested directory structure for output
+    nested_outDir = Path(outDir) / "not_imputation_not_prior" / folder_results
+    nested_outDir.mkdir(parents=True, exist_ok=True)
+
+    outPath = str(nested_outDir / "network.tsv.gz")
+
 
     # Command to run INFERELATOR
     #cmdToRun = ' '.join([
