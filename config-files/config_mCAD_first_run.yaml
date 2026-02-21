@@ -29,7 +29,17 @@ input_settings:
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
         
+        - name: "mCAD-2000-2"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        
         - name: "mCAD-2000-1/mCAD-2000-1-50-0.5"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "mCAD-2000-2/mCAD-2000-2-50-0.5"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
@@ -39,7 +49,22 @@ input_settings:
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
 
+        - name: "mCAD-2000-2/mCAD-2000-2-50-0.7"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+
         - name: "mCAD-1000-1"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "mCAD-1000-2"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "mCAD-1000-2/mCAD-1000-2-50-0.5"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
@@ -54,11 +79,31 @@ input_settings:
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
 
+        - name: "mCAD-1000-2/mCAD-1000-2-50-0.7"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+      
         - name: "mCAD-500-1"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
         
+        - name: "mCAD-500-2"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        
+        - name: "mCAD-500-2/mCAD-500-2-50-0.5"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "mCAD-500-2/mCAD-500-2-50-0.7"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+
         - name: "mCAD-500-1/mCAD-500-1-50-0.5"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
@@ -84,6 +129,21 @@ input_settings:
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
           
+        - name: "mCAD-200-2"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        
+        - name: "mCAD-200-2/mCAD-200-2-50-0.5"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "mCAD-200-2/mCAD-200-2-50-0.7"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+          
         - name: "mCAD-100-1"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
@@ -97,8 +157,23 @@ input_settings:
         - name: "mCAD-100-1/mCAD-100-1-50-0.7"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"        
+          trueEdges: "refNetwork.csv"
 
+        - name: "mCAD-100-2"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        
+        - name: "mCAD-100-2/mCAD-100-2-50-0.5"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+
+        - name: "mCAD-100-2/mCAD-100-2-50-0.7"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+          
     # Denotes a list of algorithms to run. Each has the following parameters:
     #   name: Name of the algorithm. Must be recognized by the pipeline, see
     #       code for acceptable values

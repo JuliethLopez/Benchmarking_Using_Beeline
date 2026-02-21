@@ -138,7 +138,16 @@ def main(args):
 
     cross_validation(worker).run()
 
-    folder_results = f"random_seed_{opts.random_seed_selection}"
+    # Read crossvalidation performance results
+    cv_results = pd.read_csv(f"{opts.output_dir}not_imputation_not_prior/crossvalidation_performance.tsv", sep='\t')
+    cv_results = cv_results.sort_values(by=["MCC","F1"], ascending=[False,False])
+    
+    # select the best random seed
+    random_seed_selection = int(cv_results.iloc[0]["random_seed"])
+    print(f"Best random seed: {random_seed_selection}")
+
+    #folder_results = f"random_seed_{opts.random_seed_selection}"
+    folder_results = f"random_seed_{random_seed_selection}"
     final_folder = f"{opts.output_dir}/not_imputation_not_prior/{folder_results}"
     Path(final_folder).mkdir(parents=True, exist_ok=True) #check if folder/path exist, if not creste them
 
@@ -150,7 +159,7 @@ def main(args):
 
     # Write final output
     output.to_csv(opts.out_file, sep='\t', index=False)
-
+    #output.to_csv(f'{final_folder}/network.tsv.gz', sep='\t', index=False)
 
 if __name__ == "__main__":
     main(sys.argv)

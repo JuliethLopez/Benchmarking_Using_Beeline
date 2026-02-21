@@ -76,7 +76,7 @@ def run(RunnerObj):
     refNetworkTFPath = f"{inputDir}/INFERELATOR/refNetwork_TF.tsv"
 
     # make output dirs if they do not exist:
-    outDir = "data/outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/INFERELATOR/"
+    outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/INFERELATOR/"
     os.makedirs(outDir, exist_ok = True)
     
     #output_dir = "/" + outDir
@@ -87,9 +87,7 @@ def run(RunnerObj):
     random_seed_selection = int(RunnerObj.params['random_seed_selection'])
     random_seed_max = int(RunnerObj.params['random_seed_max'])
 
-    folder_results = f"random_seed_{random_seed_selection}"
-
-    folder_results = f"random_seed_{random_seed_selection}"
+    folder_results = f"random_seed_{0}" #{random_seed_selection}"
 
     #outPath =  outDir + "not_imputation_not_prior/" + folder_results + "/network.tsv.gz"
 
@@ -122,7 +120,7 @@ def run(RunnerObj):
         f"-B {str(Path.cwd())}:/data "
         f"{str(Path.cwd())}/Algorithms/INFERELATOR/inferelator_1.0.sif "
         f'/bin/sh -c \"'
-        f"time -v -o /{outDir}time.txt "
+        f"time -v -o /data/{outDir}time.txt "
         f"conda run -n inferenv python "
         f"/data/Algorithms/INFERELATOR/runINFERELATOR.py "
         f"--input_dir={inputDir} "
@@ -130,8 +128,8 @@ def run(RunnerObj):
         f"--ref_net_file={refNetworkPath} "
         f"--ref_net_tf_names={refNetworkTFPath} "
         f"--priori_net_file={refNetworkPath} "
-        f"--output_dir=/{outDir} "
-        f"--out_file=/{outPath} "
+        f"--output_dir=/data/{outDir} "
+        f"--out_file=/data/{outPath} "
         f"--num_bootstraps={num_bootstraps} "
         f"--count_minimum={count_minimum} "
         f"--random_seed_min={random_seed_min} "
@@ -159,11 +157,14 @@ def parseOutput(RunnerObj):
     print("Output directory for INFERELATOR:", outDir)
 
     # Create full nested folder structure
-    random_seed_selection = int(RunnerObj.params['random_seed_selection'])
-    
-    folder_results = f"random_seed_{random_seed_selection}"
+    #random_seed_selection = int(RunnerObj.params['random_seed_selection'])
+    #folder_results = f"random_seed_{random_seed_selection}"
 
-    finalDir = Path(outDir) / "not_imputation_not_prior" / folder_results
+    #read the final network file from INFERELATOR
+    final_network_file = pd.read_csv(f'{outDir}/not_imputation_not_prior/random_seed_0/network.tsv.gz', sep='\t', index_col=None)
+
+    #finalDir = Path(outDir) / "not_imputation_not_prior" / folder_results
+    finalDir = Path(outDir) / "not_imputation_not_prior/random_seed_0"
     if not finalDir.exists():
         print("Creating full folder path for INFERELATOR output...")
         finalDir.mkdir(parents=True, exist_ok=False)  # creates all intermediate dirs
