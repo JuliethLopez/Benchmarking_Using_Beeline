@@ -99,7 +99,7 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
         modifiedDF = pd.melt(DF, id_vars=['dataset'], 
         # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
         # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
-        value_vars=['PPCOR', 'INFERELATOR'])
+        value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'TF_hdWGCNA'])
         
         conditions = [
             modifiedDF['dataset'].str.contains('-50'),

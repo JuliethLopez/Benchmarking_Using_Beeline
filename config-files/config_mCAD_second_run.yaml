@@ -1,3 +1,9 @@
+# It was ran 100 replicates for 200, 1000 and 2000 cells 
+# mCAD (log.606644.out) It took 12248 seconds. Was required 8880 MB
+# VSC (log.377239.out)
+# HPC ()
+# GSD ()
+
 # Input Settings: initialize base input folder names,
 # dataset collections, and algorithms to run over
 input_settings:
@@ -46,27 +52,27 @@ input_settings:
     algorithms:
 
               
-        # - name: "PIDC"
-        #   params: 
-        #       should_run: [False] #True
+        - name: "PIDC"
+          params: 
+              should_run: [True]
               
 
-        # - name: "GRNBOOST2"
-        #   params: 
-        #       should_run: [False] #True
+        - name: "GRNBOOST2"
+          params: 
+              should_run: [True]
               
               
-        # - name: "PPCOR"
-        #   params: 
-        #       should_run: [True] #True
-        #       # p-value cutoff
-        #       # Used in parsing output
-        #       pVal: [0.01]
+        - name: "PPCOR"
+          params: 
+              should_run: [True]
+              # p-value cutoff
+              # Used in parsing output
+              pVal: [0.01]
               
 
         - name: "INFERELATOR"
           params:
-              should_run: [True] #True
+              should_run: [True]
               num_bootstraps: [3] #The number of bootstraps to run
               count_minimum: [0.05] #The mean expression value which is required to retain a gene for modeling
               random_seed_min: [40] #The minimum random number seed to use
