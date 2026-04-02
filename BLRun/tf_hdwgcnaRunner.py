@@ -39,6 +39,7 @@ def run(RunnerObj):
     
     outPath =  "data/" + str(outDir) + 'outFile.txt'
 
+    run_tf = str(RunnerObj.params['run_tf'])
     nThreads = str(RunnerObj.params['nThreads'])
     nVariableFeatures = str(RunnerObj.params['nVariableFeatures'])
     clustering_resolution = str(RunnerObj.params['clustering_resolution'])
@@ -47,6 +48,7 @@ def run(RunnerObj):
     max_shared_cells = str(RunnerObj.params['max_shared_cells'])
     networkType = str(RunnerObj.params['networkType'])
     soft_power = str(RunnerObj.params['soft_power'])
+    delete_grey_module = str(RunnerObj.params['delete_grey_module'])
 
     #cmdToRun = ' '.join(['docker run --rm -v', 
     #                     str(Path.cwd())+':/data/',  # <-- add the missing space and slash
@@ -65,7 +67,7 @@ def run(RunnerObj):
                         '/data/' + str(outDir) + 'time.txt',
                         'Rscript /data/Algorithms/TF_hdWGCNA/runTF_hdWGCNA.R',
                         inputPath, outPath, 
-                        nThreads, nVariableFeatures, clustering_resolution, metacells_k, min_cells_per_metacell, max_shared_cells, networkType, soft_power, '\"']) # for singularity
+                        run_tf, nThreads, nVariableFeatures, clustering_resolution, metacells_k, min_cells_per_metacell, max_shared_cells, networkType, soft_power, delete_grey_module, '\"']) # for singularity
 
     print(cmdToRun)
     os.system(cmdToRun)
@@ -91,6 +93,12 @@ def parseOutput(RunnerObj):
     OutDF = pd.read_csv(outDir+'outFile.txt', sep = '\t', header = 0)
 
     # Formats the outFile if necessary
-    outFile = OutDF[["tf", "gene", "Cor"]]
-    outFile.columns = ['Gene1','Gene2','EdgeWeight']
+    required_cols = ['Gene1', 'Gene2', 'EdgeWeight']
+
+    if not all(col in OutDF.columns for col in required_cols):
+        outFile = OutDF[["tf", "gene", "Cor"]].copy()
+        outFile.columns = ['Gene1', 'Gene2', 'EdgeWeight']
+    else:
+        outFile = OutDF[['Gene1', 'Gene2', 'EdgeWeight']].copy()
+        
     outFile.to_csv(f'{outDir}/rankedEdges.csv', sep='\t', index=False)

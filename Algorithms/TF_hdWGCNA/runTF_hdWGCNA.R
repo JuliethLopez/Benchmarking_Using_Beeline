@@ -38,17 +38,20 @@ set.seed(12345)
 args <- commandArgs(trailingOnly = T)
 inFile <- paste0("/",args[1])
 outFile <-  paste0("/",args[2])
-nThreads <- as.numeric(args[3])
-nVariableFeatures <- as.numeric(args[4])
-clustering_resolution <- as.numeric(args[5])
-metacells_k <- as.numeric(args[6])
-min_cells_per_metacell <- as.numeric(args[7])
-max_shared_cells <- as.numeric(args[8])
-networkType <- args[9]
-soft_power <- as.numeric(args[10])
+run_tf <- as.logical(args[3])
+nThreads <- as.numeric(args[4])
+nVariableFeatures <- as.numeric(args[5])
+clustering_resolution <- as.numeric(args[6])
+metacells_k <- as.numeric(args[7])
+min_cells_per_metacell <- as.numeric(args[8])
+max_shared_cells <- as.numeric(args[9])
+networkType <- args[10]
+soft_power <- as.numeric(args[11])
+delete_grey_module <- as.logical(args[12])
 
 print(paste0("inFile:", inFile))
 print(paste0("outFile:", outFile))
+print(paste0("run_tf:", run_tf))
 print(paste0("nThreads:", nThreads))
 print(paste0("nVariableFeatures:", nVariableFeatures))
 print(paste0("clustering_resolution:", clustering_resolution))
@@ -57,6 +60,18 @@ print(paste0("min_cells_per_metacell:", min_cells_per_metacell))
 print(paste0("max_shared_cells:", max_shared_cells))
 print(paste0("networkType:", networkType))
 print(paste0("soft_power:", soft_power))
+print(paste0("Delete_grey_modules:", delete_grey_module))
+
+# Remove old Tom files to ensure not loading of old results
+files <- c(
+  Sys.glob("blockwiseTOM*.RData"),
+  Sys.glob("individualTOM*.RData")
+)
+
+if (length(files) > 0) {
+  message("Removing old WGCNA TOM files")
+  file.remove(files)
+}
 
 # optionally enable multithreading
 enableWGCNAThreads(nThreads = nThreads)
@@ -76,6 +91,8 @@ print(paste0("TOM folder:", outdir_TOM))
 #list.files("/data/inputs/example/GSD/TF_hdWGCNA")
 #list.files("data/inputs/example/GSD/TF_hdWGCNA")
 
+# ---------- Basic WGCNA-----------
+
 inputExpr <- read.csv(inFile,row.names = 1,check.names = FALSE) # first column = gene names
 inputExpr <- as.matrix(inputExpr)
 print("Gene expression data successfully readed")
@@ -83,6 +100,7 @@ print(class(inputExpr[1:5,1:5]))
 print(dim(inputExpr))# genes x cells
 
 n_cells <- ncol(inputExpr)
+print(paste0("The number of cells is: ",n_cells))
 
 geneNames <- rownames(inputExpr)
 rownames(inputExpr) <- c(geneNames)
@@ -105,8 +123,9 @@ ggsave(file.path(outdir, "VariableFeatures.png"), plot1)
 variable_features <- VariableFeatures(seurat_object)
 if (length(variable_features) < nVariableFeatures) {
   print(paste0("The number of variable features found (", length(variable_features), ") is less than nVariableFeatures (", nVariableFeatures, "). Using all available variable features."))
-  variable_features <- rownames(seurat_object)
+  variable_features <- rownames(seurat_object@assays$RNA$data)
 }
+#sacle data
 seurat_object <- ScaleData(seurat_object, features = variable_features)
 
 # Run PCA
@@ -137,19 +156,20 @@ plot4 <- DimPlot(seurat_object, reduction = "umap", group.by = metacells_variabl
 ggsave(file.path(outdir, "UMAP_clustering.png"), plot4)
 
 
-# genes expresados en al menos el 5% de las células
+# se podría filtrar genes expresados en al menos el 5% de las células, pero para las pruebas con redes simuladas no funciona
+print("All variable features")
+print(variable_features)
 seurat_obj <- SetupForWGCNA(
   seurat_object,
-  gene_select = "fraction", # the gene selection approach
+  gene_select = "fraction", # the gene selection approach, custom
   fraction = 0.05, # fraction of cells that a gene needs to be expressed in order to be included
-  wgcna_name = "tutorial" # the name of the hdWGCNA experiment
+  #features = variable_features,
+  wgcna_name = "hdWGCNA" # the name of the hdWGCNA experiment
 )
 
 
 # metacells
-if(n_cells < 500){
-  paste0("The number of cells (", n_cells, ") is less than 500. Metacells may not be reliable with low cell numbers, so metacells will not be calculated.")
-} else {
+if(n_cells > 1000){
   print("Creating metacells per cluster")
   seurat_obj <- MetacellsByGroups(
     seurat_obj = seurat_obj,
@@ -163,7 +183,7 @@ if(n_cells < 500){
 
   # normalize metacell expression matrix:
   seurat_obj <- NormalizeMetacells(seurat_obj)
-  cell_types <- unique(seurat_obj@misc$tutorial$wgcna_metacell_obj@meta.data[[metacells_variable_group_by]])
+  cell_types <- unique(seurat_obj@misc$hdWGCNA$wgcna_metacell_obj@meta.data[[metacells_variable_group_by]])
 
   seurat_obj <- ScaleMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
   seurat_obj <- RunPCAMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
@@ -213,6 +233,22 @@ if(n_cells < 500){
     layer = 'data' # using normalized data
   )
 
+  # # take a look at the metadata
+  # wgcna_name <- seurat_obj@misc$active_wgcna
+  # seurat_obj@misc[[wgcna_name]]$datExpr
+} else {
+  paste0("The number of cells (", n_cells, ") is not higher than 1000. Metacells may not be reliable with low cell numbers, so metacells will not be calculated. Using full Seurat object.")
+  
+  seurat_obj$dummy_group <- "all"
+
+  seurat_obj <- SetDatExpr(
+    seurat_obj,
+    group_name = "all",
+    group.by = "dummy_group",
+    assay = "RNA",
+    layer = "data",
+    use_metacells = FALSE
+  )
 }
 
 # Test different soft powers:
@@ -232,13 +268,18 @@ dev.off()
 power_table <- GetPowerTable(seurat_obj)
 write_csv2(power_table, file = file.path(outdir,"power_table.csv"))
 
-# construct co-expression network:
+# Construct co-expression network. This function calls blockwiseConsensusModules, which uses the parameter minModuleSize for minimum module size for module detection. This value by default is 20, however given the small number of genes we have in total, it is required a smaller value.
+
+print("Min module size set to:")
+print(ceiling(length(variable_features)/2))
+
 seurat_obj <- ConstructNetwork(
   seurat_obj,
   soft_power = soft_power,
-  tom_name = 'tom_metacells', # name of the topoligical overlap matrix written to disk
+  tom_name = 'metacells', # name of the topoligical overlap matrix written to disk
   overwrite_tom = TRUE,
-  tom_outdir = outdir_TOM
+  tom_outdir = outdir_TOM,
+  minModuleSize = ceiling(length(variable_features)/2)
 )
 
 # get TOM (tarda bastante tiempo)
@@ -249,66 +290,118 @@ png(file.path(outdir, "Dendogram_tom_metacells.png"))
 PlotDendrogram(seurat_obj, main='hdWGCNA Dendrogram')
 dev.off()
 
-# Identify TFs in genes promoter regions (algorithm MotifScan)
-# 1. list of position weight matrices for each TF
-
-JASPAR2024 <- JASPAR2024()
-sq24 <- RSQLite::dbConnect(RSQLite::SQLite(), db(JASPAR2024))
-
-pfm_core <- TFBSTools::getMatrixSet(
-  x = sq24,
-  opts = list(collection = "CORE", tax_group = 'vertebrates', all_versions = FALSE)
-)
-
-# run the motif scan using: TF and binding sites from curated data base, our exiting data (genes + TF)
-# Extract promoter sequencing from EnsDb
-# Scan those sequences to detect motives from pfm
-# delever metric with moptif per gene and targets per TF
-seurat_obj <- MotifScan(
-  seurat_obj,
-  species_genome = 'hg38',
-  pfm = pfm_core,
-  EnsDb = EnsDb.Hsapiens.v86
-)
-
-
-# Construct the nextwork TF_hdWGCNA
-# https://smorabit.github.io/hdWGCNA/articles/tf_network.html
-
-# get the motif df
-motif_df <- GetMotifs(seurat_obj)
-write_csv2(motif_df, file = file.path(outdir,"motifs_df.csv"))
-
-# keep all TFs, and then remove all genes from the grey module
-tf_genes <- unique(motif_df$gene_name)
+# save modules
 modules <- GetModules(seurat_obj)
 write_csv2(modules, file = file.path(outdir,"modules.csv"))
 
 # grey modules contain genes that did not clustered properly to other modules, so can be ignored
 nongrey_genes <- subset(modules, module != 'grey') %>% .$gene_name
-genes_use <- c(tf_genes, nongrey_genes)
 
-# update the gene list and re-run SetDatExpr
-seurat_obj_filter <- SetWGCNAGenes(seurat_obj, genes_use)
-seurat_obj_filter <- SetDatExpr(seurat_obj_filter) # Also can be added group.by = 'cell_type', group_name='EX'
+# ---------- Transcription factor regulatory network analysis WGCNA-----------
 
-# define model params, this are used for XGBoost
-model_params <- list(
-  objective = 'reg:squarederror',
-  max_depth = 1,
-  eta = 0.1,
-  nthread=16,
-  alpha=0.5
-)
+if(run_tf==TRUE){
+  print("Running transcription factor extension...")
+  # Identify TFs in genes promoter regions (algorithm MotifScan)
+  # 1. list of position weight matrices for each TF
 
-# construct the TF network
-# Gain: contribution of each feature to the model. Highest percentage means important feature to predict the label used for the training (only available for tree models)
-# Cover: metric of the number of observation related to this feature 
-# Weight/Frequency: percentage representing the relative number of times a feature have been taken into trees.
-# Cor: correlation between feature (TF) and gene expression
-seurat_obj_filter <- ConstructTFNetwork(seurat_obj_filter, model_params) 
+  JASPAR2024 <- JASPAR2024()
+  sq24 <- RSQLite::dbConnect(RSQLite::SQLite(), db(JASPAR2024))
 
-# extract results
-results <- GetTFNetwork(seurat_obj_filter)
-# Write output to a file
+  pfm_core <- TFBSTools::getMatrixSet(
+    x = sq24,
+    opts = list(collection = "CORE", tax_group = 'vertebrates', all_versions = FALSE)
+  )
+
+  # run the motif scan using: TF and binding sites from curated data base, our exiting data (genes + TF)
+  # Extract promoter sequencing from EnsDb
+  # Scan those sequences to detect motives from pfm
+  # delever metric with moptif per gene and targets per TF
+  seurat_obj <- MotifScan(
+    seurat_obj,
+    species_genome = 'hg38',
+    pfm = pfm_core,
+    EnsDb = EnsDb.Hsapiens.v86
+  )
+
+
+  # Construct the nextwork TF_hdWGCNA
+  # https://smorabit.github.io/hdWGCNA/articles/tf_network.html
+
+  # get the motif df
+  motif_df <- GetMotifs(seurat_obj)
+  write_csv2(motif_df, file = file.path(outdir,"motifs_df.csv"))
+
+  # keep all TFs, and then remove all genes from the grey module
+  tf_genes <- unique(motif_df$gene_name)
+  
+  if(delete_grey_module == TRUE){
+    genes_use <- c(tf_genes, nongrey_genes)
+  } else {
+    genes_use <- tf_genes
+  }
+
+
+  # update the gene list and re-run SetDatExpr
+  seurat_obj_filter <- SetWGCNAGenes(seurat_obj, genes_use)
+  seurat_obj_filter <- SetDatExpr(seurat_obj_filter) # Also can be added group.by = 'cell_type', group_name='EX'
+
+  # define model params, this are used for XGBoost
+  model_params <- list(
+    objective = 'reg:squarederror',
+    max_depth = 1,
+    eta = 0.1,
+    nthread=16,
+    alpha=0.5
+  )
+
+  # construct the TF network
+  # Gain: contribution of each feature to the model. Highest percentage means important feature to predict the label used for the training (only available for tree models)
+  # Cover: metric of the number of observation related to this feature 
+  # Weight/Frequency: percentage representing the relative number of times a feature have been taken into trees.
+  # Cor: correlation between feature (TF) and gene expression
+  seurat_obj_filter <- ConstructTFNetwork(seurat_obj_filter, model_params) 
+
+  # extract results
+  results <- GetTFNetwork(seurat_obj_filter)
+  #results <- results[,c("tf", "gene", "Cor")]
+  #colnames(results) = c('Gene1','Gene2','EdgeWeight')
+} else {
+  # gene names
+  gene_name <- modules$gene_name
+  #nongrey_genes <- modules[modules$module!="grey","gene_name"]
+
+  # load TOM matrix
+  tom_path = file.path(outdir_TOM,"metacells_TOM.rda")
+  
+  if (file.exists(tom_path)==TRUE) {
+    print(paste0("Loading TOM matrix file from: ", tom_path))
+    load(tom_path)
+  } else {
+    tom_path = file.path(outdir_TOM,"metacells_block.1.rda")
+    print(paste0("Loading TOM matrix file from: ", tom_path))
+    load(tom_path)
+  }
+  print("TOM matrix loaded successfully")
+  
+  TOM <- 1 - as.matrix(consTomDS)
+  rownames(TOM) <- gene_name
+  colnames(TOM) <- gene_name
+  # filter grey modules
+  TOM <- TOM[nongrey_genes, nongrey_genes]
+  edges <- which(TOM>0, arr.ind=TRUE) #filter according to edge strength. As this could overstimate the result of this method in the benchmarking, only used the minimum value, 0
+  #edges <- edges[edges[,1] < edges[,2], ] #delete duplicated in not directed networks, not applicated to be fair with other similar methods, as PPCOR
+  
+  # create dataframe
+  results <- data.frame(
+    Gene1 = rownames(TOM)[edges[,1]],
+    Gene2 = colnames(TOM)[edges[,2]],
+    EdgeWeight = TOM[edges]
+  )
+}
+
+# --------------Write output to a file-----------------
+
+print("This are the results GetTFNetwork")
+print(head(results))
+
 write.table(results, outFile, sep = "\t", quote = FALSE, row.names = FALSE)

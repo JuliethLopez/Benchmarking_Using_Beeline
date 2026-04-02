@@ -14,6 +14,7 @@ import BLRun.scribeRunner as SCRIBE
 import BLRun.scsglRunner as SCSGL
 import BLRun.inferelatorRunner as INFERELATOR
 import BLRun.tf_hdwgcnaRunner as TF_hdWGCNA
+import BLRun.hdwgcnaRunner as hdWGCNA
 
 from pathlib import Path
 
@@ -32,7 +33,8 @@ InputMapper = {'SCODE':SCODE.generateInputs,
                'SCRIBE':SCRIBE.generateInputs,
                'SCSGL':SCSGL.generateInputs,
                'INFERELATOR':INFERELATOR.generateInputs,
-               'TF_hdWGCNA':TF_hdWGCNA.generateInputs}
+               'TF_hdWGCNA':TF_hdWGCNA.generateInputs,
+               'hdWGCNA':hdWGCNA.generateInputs,}
 
 
 
@@ -52,7 +54,8 @@ AlgorithmMapper = {'SCODE':SCODE.run,
             'SCRIBE':SCRIBE.run,
             'SCSGL':SCSGL.run,
             'INFERELATOR':INFERELATOR.run,
-            'TF_hdWGCNA':TF_hdWGCNA.run}
+            'TF_hdWGCNA':TF_hdWGCNA.run,
+            'hdWGCNA':hdWGCNA.run}
 
 
 
@@ -71,7 +74,8 @@ OutputParser = {'SCODE':SCODE.parseOutput,
             'SCRIBE':SCRIBE.parseOutput,
             'SCSGL':SCSGL.parseOutput,
             'INFERELATOR':INFERELATOR.parseOutput,
-            'TF_hdWGCNA':TF_hdWGCNA.parseOutput}
+            'TF_hdWGCNA':TF_hdWGCNA.parseOutput,
+            'hdWGCNA':hdWGCNA.parseOutput}
 
 
 class Runner(object):

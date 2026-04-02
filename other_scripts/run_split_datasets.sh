@@ -20,11 +20,11 @@ done
 
 # Look for lacking files
 # -f files, -s not empty files
-for d in outputs/Curated/VSC/VSC-2000-*; do
+for d in outputs/Curated/mCAD/mCAD-2000-*; do
     [ -f "$d/hdWGCNA/rankedEdges.csv" ] || basename "$d"
 done
 
 # delete uncomplete folders
-for d in outputs/Curated/HSC/HSC-2000-*; do
-    [ -f "$d/hdWGCNA/rankedEdges.csv" ] || rm -r "$d/hdWGCNA/TOM"
+for d in outputs/Curated/VSC/VSC-2000-*; do
+    [ -f "$d/INFERELATOR/rankedEdges.csv" ] || rm -r "$d/INFERELATOR"
 done

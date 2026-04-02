@@ -6,7 +6,7 @@ input_settings:
     input_dir: "inputs"
 
     # Subdirectory of inputs that datasets are placed in
-    dataset_dir: "Curated/mCAD"
+    dataset_dir: "Curated/VSC"
 
     # Denotes a list of datasets, each with the following parameters:
     #   name: Name of the dataset. May be used in logging or other
@@ -22,158 +22,141 @@ input_settings:
     # If this parameter is absent (or commented out), run BEELINE on every sub-directory of dataset_dir. 
     # BEELINE will assume that these files are present under the default names 
     # "ExpressionData.csv", "PseudoTime.csv" and "refNetwork.csv", respectively.
-    datasets:   
+    datasets:
 
-        - name: "mCAD-2000-1"
+        - name: "VSC-2000-4"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-        
-        - name: "mCAD-2000-2"
+        - name: "VSC-2000-40"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-        
-        - name: "mCAD-2000-1/mCAD-2000-1-50-0.5"
+        - name: "VSC-2000-41"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-2000-2/mCAD-2000-2-50-0.5"
+        - name: "VSC-2000-42"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-2000-1/mCAD-2000-1-50-0.7"
+        - name: "VSC-2000-43"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-2000-2/mCAD-2000-2-50-0.7"
+        - name: "VSC-2000-44"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-1000-1"
+        - name: "VSC-2000-45"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-1000-2"
+        - name: "VSC-2000-46"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-1000-2/mCAD-1000-2-50-0.5"
+        - name: "VSC-2000-47"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-1000-1/mCAD-1000-1-50-0.5"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv" 
-
-        - name: "mCAD-1000-1/mCAD-1000-1-50-0.7"
+        - name: "VSC-2000-48"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-1000-2/mCAD-1000-2-50-0.7"
+        - name: "VSC-2000-49"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-      
-        - name: "mCAD-500-1"
+        - name: "VSC-2000-5"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-        
-        - name: "mCAD-500-2"
+        - name: "VSC-2000-50"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-        
-        - name: "mCAD-500-2/mCAD-500-2-50-0.5"
+        - name: "VSC-2000-51"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-500-2/mCAD-500-2-50-0.7"
+        - name: "VSC-2000-52"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-500-1/mCAD-500-1-50-0.5"
+        - name: "VSC-2000-53"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-500-1/mCAD-500-1-50-0.7"
+        - name: "VSC-2000-54"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-200-1"
+        - name: "VSC-2000-55"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-        
-        - name: "mCAD-200-1/mCAD-200-1-50-0.5"
+        - name: "VSC-2000-56"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-200-1/mCAD-200-1-50-0.7"
+        - name: "VSC-2000-57"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-200-2"
+        - name: "VSC-2000-59"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-        
-        - name: "mCAD-200-2/mCAD-200-2-50-0.5"
+        - name: "VSC-2000-6"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-200-2/mCAD-200-2-50-0.7"
+        - name: "VSC-2000-60"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-          
-        - name: "mCAD-100-1"
+        - name: "VSC-2000-61"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-        
-        - name: "mCAD-100-1/mCAD-100-1-50-0.5"
+        - name: "VSC-2000-62"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-100-1/mCAD-100-1-50-0.7"
+        - name: "VSC-2000-63"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        - name: "VSC-2000-64"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        - name: "VSC-2000-65"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        - name: "VSC-2000-66"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        - name: "VSC-2000-67"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        - name: "VSC-2000-68"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        - name: "VSC-2000-69"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+        - name: "VSC-2000-7"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
 
-        - name: "mCAD-100-2"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-        
-        - name: "mCAD-100-2/mCAD-100-2-50-0.5"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-
-        - name: "mCAD-100-2/mCAD-100-2-50-0.7"
-          exprData: "ExpressionData.csv"
-          cellData: "PseudoTime.csv"
-          trueEdges: "refNetwork.csv"
-          
     # Denotes a list of algorithms to run. Each has the following parameters:
     #   name: Name of the algorithm. Must be recognized by the pipeline, see
     #       code for acceptable values
@@ -188,135 +171,65 @@ input_settings:
               
         - name: "PIDC"
           params: 
-              should_run: [False] #True
-
-
-        - name: "GRNVBEM"
-          params: 
-              should_run: [False]
-
+              should_run: [True]
               
 
-        - name: "GENIE3"
-          params: 
-              should_run: [False]
-              
-              
-              
         - name: "GRNBOOST2"
           params: 
-              should_run: [False] #True
+              should_run: [False]
               
               
         - name: "PPCOR"
           params: 
-              should_run: [False] #True
+              should_run: [False]
               # p-value cutoff
               # Used in parsing output
               pVal: [0.01]
               
-               
-        - name: "SCODE"
-          params:
-              should_run: [False]
-              z: [10]
-              nIter: [1000]
-              nRep: [6]
-
-        - name: "SCNS"
-          params: 
-              should_run: [False]
-              
-              
-        - name: "SINCERITIES"
-          params: 
-              should_run: [False]
-              nBins: [10]
-              
-              
-        - name: "LEAP"
-          params: 
-              should_run: [False]
-              # Default maxLag value is 0.33
-              maxLag: [0.33]
-             
-              
-        - name: "GRISLI"
-          params: 
-              should_run: [False]
-              L: [10]
-              R: [3000]
-              alphaMin: [0.0]
-
-
-        - name: "SINGE"
-          params: 
-              should_run: [False]
-              lambda: [0.01]
-              dT: [15]
-              num_lags: [5]
-              kernel_width: [0.5]
-              prob_zero_removal: [0]
-              prob_remove_samples: [0.0]
-              family: ["gaussian"]
-              num_replicates: [6]
-
-
-        - name: "SCRIBE"
-          params: 
-              should_run: [False]
-              ### required parameters
-              # a list of delay values
-              delay: ["5"]
-              # any of 'RDI', 'uRDI', 'cRDI', or 'ucRDI'
-              method: ['ucRDI']
-              # lower detection limit (expression below this 
-              # will be treated as zero.
-              lowerDetectionLimit: [0]
-              # expressionFamily: for synthetic data use uninormal
-              #  for mRNA count data use negbinomial.size()
-              expressionFamily: ['uninormal']
-              ### optional but recommended parameters
-              # log transform expression values or not
-              log: [False]
-              # ignore pseudotime values (and use experimental
-              # time points instead), recommended True for synthetic data
-              # False for real mRNA data
-              ignorePT: [True]
-
-
-        - name: "SCSGL"
-          params:
-              should_run: [False]
-              pos_density: [0.45]
-              neg_density: [0.45]
-              assoc: ["correlation"]
 
         - name: "INFERELATOR"
           params:
-              should_run: [True] #True
+              should_run: [False]
               num_bootstraps: [3] #The number of bootstraps to run
               count_minimum: [0.05] #The mean expression value which is required to retain a gene for modeling
               random_seed_min: [40] #The minimum random number seed to use
               random_seed_max: [45] #The maximum random number seed to use
               random_seed_selection: [43] #The random number seed to use for selection
               
-        - name: "TF_hdWGCNA"
+              
+        - name: "hdWGCNA"
           params:
-              should_run: [False] #True
-              # number of threads to use
-              nThreads: [64]
+              should_run: [False]
+              run_tf: [False]
+              nThreads: [2] # number of threads to use
               nVariableFeatures: [2000]
               clustering_resolution: [0.5]
               metacells_k: [5] # nearest-neighbors parameter in MetacellsByGroups fuction. 25 by default in the fuction
               min_cells_per_metacell: [20] # minimum number of cells per metacell in MetacellsByGroups function. 100 by default in the function
               max_shared_cells: [2] # maximum number of shared cells between two metacells in MetacellsByGroups function. 15 by default in the function
               networkType: ["signed"] # WGCNA network type in TestSoftPowers function
-              soft_power: [10] # WGCNA soft-thresholding power in ConstructNetwork function
+              soft_power: [3] # WGCNA soft-thresholding power in ConstructNetwork function
+              delete_grey_module: [True]
+
+              
+        # - name: "TF_hdWGCNA"
+        #   params:
+        #       should_run: [False]
+        #       run_tf: [True]
+        #       nThreads: [8] # number of threads to use
+        #       nVariableFeatures: [2000]
+        #       clustering_resolution: [0.5]
+        #       metacells_k: [5] # nearest-neighbors parameter in MetacellsByGroups fuction. 25 by default in the fuction
+        #       min_cells_per_metacell: [20] # minimum number of cells per metacell in MetacellsByGroups function. 100 by default in the function
+        #       max_shared_cells: [2] # maximum number of shared cells between two metacells in MetacellsByGroups function. 15 by default in the function
+        #       networkType: ["signed"] # WGCNA network type in TestSoftPowers function
+        #       soft_power: [8] # WGCNA soft-thresholding power in ConstructNetwork function
+        #       delete_grey_module: [False]
+
 
 # Output Settings: initialize base output folder names
 output_settings:
 
     # Base output directory
     output_dir: "outputs"
-    output_prefix: "mCAD"
+    output_prefix: "VSC"

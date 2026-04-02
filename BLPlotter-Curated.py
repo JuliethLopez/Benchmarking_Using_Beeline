@@ -99,17 +99,22 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
         modifiedDF = pd.melt(DF, id_vars=['dataset'], 
         # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
         # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
-        value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'TF_hdWGCNA'])
+        value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'])
         
         conditions = [
-            modifiedDF['dataset'].str.contains('-50'),
-            modifiedDF['dataset'].str.contains('-70')
+            #modifiedDF['dataset'].str.contains('-50'),
+            #modifiedDF['dataset'].str.contains('-70')
+            modifiedDF['dataset'].str.contains('-200-'),
+            modifiedDF['dataset'].str.contains('-1000-')
+            #modifiedDF['dataset'].str.contains('-2000-')
         ]
-        outputs = ['50', '70']
-        existing_cats = ['0', '50', '70']
-        modifiedDF['category'] = pd.Series(np.select(conditions, outputs, '0'))
+        #outputs = ['50', '70']
+        #existing_cats = ['0', '50', '70']
+        outputs = ['200', '1000']
+        existing_cats = ['200', '1000', '2000']
+        modifiedDF['category'] = pd.Series(np.select(conditions, outputs, '2000')) #'0'
         modifiedDF['category'] = modifiedDF['category'].astype('category').cat.set_categories(existing_cats, ordered=True)
-        #modifiedDF['category'] = modifiedDF['category'].astype('category').cat.reorder_categories(['0', '50', '70'])        
+        modifiedDF['category'] = modifiedDF['category'].astype('category').cat.reorder_categories(['200', '1000', '2000'])
               
         if len(datasets) > 1:
             subax = axes[i]
@@ -144,7 +149,7 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
         ax.legend_.remove()
         # Add just the handles/labels from the box plot back
         ax.legend(handles, labels,
-                  title = 'Dropout Rate', bbox_to_anchor=(.5, 1.4), loc = 'upper center', ncol = len(modifiedDF['category'].cat.categories))
+                  title = 'Number of cells', bbox_to_anchor=(.5, 1), loc = 'upper center', ncol = len(modifiedDF['category'].cat.categories))
       
         ax.set_ylim([0.0,1])
         ax.set_ylabel(resTypeName, fontsize = 18)
@@ -511,7 +516,7 @@ def main():
                     # by dividing the values by that of a random predictor
                     if res == 'Early Precision Ratio' or res == 'AUPRC Ratio':
                         overviewDF.loc[alg][res,dataset] =  ResDF[alg].median()/randPredictor[dataset]
-                    elif res == 'Stability Across Datasets' or res == 'Spearman':
+                    elif res == 'Stability Across Datasets' or res == 'Jaccard':
                         overviewDF.loc[alg][res,dataset] =  ResDF.iloc[0][alg]
                     else:
         
@@ -530,8 +535,8 @@ def main():
         #fig, ax = plt.subplots(figsize=(40, 30))
         COplot(
             overviewDF, 
-            width=3 * len(evalConfigs) + 1, 
-            height=len(algs) + 3, 
+            width=10 * len(evalConfigs) + 1, 
+            height=len(algs) + 5, 
             randValues=[1, 0, 0, 0],
             shape=['hm', 'hm', 'hm', 'arrow'], 
             palettes=[pale3, pale3h, pale5, pale3r],
@@ -539,16 +544,18 @@ def main():
             rotation=[0, 0, 0, 0],
             switch=[False, False, True, False]
         )
+        #plt.suptitle(" / ".join(resType), fontsize=20, y=0.98)
         sns.set_context("paper")  # Try "paper", "notebook", or set manually
-        plt.xticks(fontsize=8, rotation=45, ha='right')  # Or try 90
+        plt.xticks(fontsize=10, rotation=45, ha='right')  # Or try 90
         plt.yticks(fontsize=8, rotation=0)  # usually y-axis is fine without rotation
-        plt.subplots_adjust(left=0.2, right=0.95, top=0.95, bottom=0.3)
+        plt.subplots_adjust(left=0.2, right=0.85, top=0.88, bottom=0.3)
+        #plt.tight_layout(pad=3.0)
         
-        plt.tight_layout(pad=3.0)
         for ax in plt.gcf().axes:
             for label in ax.get_xticklabels():
                 label.set_rotation(45)
                 label.set_ha('right')
+                label.set_fontsize(12)
         
         file = opts.output + '/' \
                 + '-'.join([str(c.output_settings.output_prefix) for c in evalConfigs]) + '-overview.pdf'

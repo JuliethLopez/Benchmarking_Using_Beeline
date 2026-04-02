@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 # Define rute
-all_datasets = ['GSD'] #'HSC','mCAD','VSC'
+all_datasets = ['mCAD', 'GSD', 'HSC', 'VSC']
 
 for dataset in all_datasets:
     input_folder = f"/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/Curated/{dataset}"

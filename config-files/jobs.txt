@@ -1,0 +1,81 @@
+# test tfwgcna do not find motifs because half of genes are deleted in modules
+
+HSC (702391), 973 seconds, 7314 MB
+VSC (702267)
+mCAD (702074 and 705109), 
+- (702074), 203 seconds, 8904 MB
+- (714988), 778 seconds, 7279 MB
+GSD (),
+
+# test tfwgcna without deleting genes in modules do not improve results because NOT motifs are found
+# error "Not enough putative TFs, skipping GATA4" and the same for other TF NR5A1, SOX9, SRY
+mCAD (752247)
+HSC (752625)
+VSC (752634)
+GSD (752633)
+
+# complete benchmarking
+mCAD (760278) It took 43209 senconds = 12 hours.But not runned complete.
+HSC (767310) Succesful. I took 8878 secons = 11 hours, and 8878 MB were required
+VSC (760842) It took 43942 senconds = 12 hours.But not runned complete.
+GSD (769022) It took 43206 senconds = 12 hours.But not runned complete.
+
+# runs datasets splitted
+config_VSC_1 running
+Job <257253> is submitted to queue <normal>.
+config_VSC_2 running
+Job <257255> is submitted to queue <normal>.
+config_VSC_3 running
+Job <257258> is submitted to queue <normal>.
+config_VSC_4 running
+Job <257260> is submitted to queue <normal>.
+config_VSC_5 running
+Job <257263> is submitted to queue <normal>.
+config_VSC_6 running
+Job <257266> is submitted to queue <normal>.
+config_VSC_7 running
+Job <257269> is submitted to queue <normal>.
+config_VSC_8 running
+Job <257271> is submitted to queue <normal>.
+config_VSC_9 running
+Job <688589> is submitted to queue <normal>.
+
+config_mCAD_1 running
+Job <257334> is submitted to queue <normal>.
+config_mCAD_2 running
+Job <257337> is submitted to queue <normal>.
+config_mCAD_3 running
+Job <257339> is submitted to queue <normal>.
+config_mCAD_4 running
+Job <257342> is submitted to queue <normal>.
+config_mCAD_5 running
+Job <257346> is submitted to queue <normal>.
+config_mCAD_6 running
+Job <257349> is submitted to queue <normal>.
+config_mCAD_7 running
+Job <257353> is submitted to queue <normal>.
+config_mCAD_8 running
+Job <257357> is submitted to queue <normal>.
+config_mCAD_9 running
+Job <688519> is submitted to queue <normal>.
+
+config_GSD_1 running
+Job <258065> is submitted to queue <normal>.
+config_GSD_2 running
+Job <258068> is submitted to queue <normal>.
+config_GSD_3 running
+Job <258072> is submitted to queue <normal>.
+config_GSD_4 running
+Job <258075> is submitted to queue <normal>.
+config_GSD_5 running
+Job <258079> is submitted to queue <normal>.
+config_GSD_6 running
+Job <258083> is submitted to queue <normal>.
+config_GSD_7 running
+Job <258086> is submitted to queue <normal>.
+config_GSD_8 running
+Job <258088> is submitted to queue <normal>.
+config_GSD_9 running
+Job <688462> is submitted to queue <normal>.
+
+tfWGCNA Job <694481> is submitted to queue <normal>.
