@@ -75,4 +75,11 @@ BLEval.parseTime module
     :undoc-members:
     :show-inheritance:
 
+BLEval.parseMemory module
+-----------------------
+
+.. automodule:: BLEval.parseMemory
+    :members:
+    :undoc-members:
+    :show-inheritance:
 

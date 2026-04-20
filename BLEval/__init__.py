@@ -31,6 +31,7 @@ from networkx.convert_matrix import from_pandas_adjacency
 
 # local imports
 from BLEval.parseTime import getTime
+from BLEval.parseMemory import getMemory
 from BLEval.computeDGAUC import PRROC
 from BLEval.computeBorda import Borda
 from BLEval.computeJaccard import Jaccard
@@ -149,6 +150,23 @@ class BLEval(object):
             TimeDict[dataset["name"]] = timevals
 
         return TimeDict
+    
+    def parseMemory(self):
+        """
+        Parse memory output for each
+        algorithm-dataset combination.
+        
+        :returns:
+            A dictionary of memory usage values for all dataset-algorithm combinations
+        """
+        MemoryDict = dict()
+
+        for dataset in tqdm(self.input_settings.datasets, 
+                            total = len(self.input_settings.datasets), unit = " Datasets"):
+            memoryvals = getMemory(self, dataset)
+            MemoryDict[dataset["name"]] = memoryvals
+
+        return MemoryDict
 
     def computeJaccard(self):
 

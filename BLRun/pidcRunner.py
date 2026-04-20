@@ -39,7 +39,7 @@ def run(RunnerObj):
     cmdToRun = ' '.join(['/software/singularity/3.11.4//bin/singularity exec -B',
                         str(Path.cwd()) + ':/data/',
                         str(Path.cwd() / 'Algorithms/PIDC/pidc_1.0.sif'),
-                        '/bin/sh -c \"time -v -o',
+                        '/bin/sh -c \"time -v -o' #"/usr/bin/time" '-v -o'
                         "/data/" + str(outDir) + 'time.txt',
                         "julia /data/Algorithms/PIDC/runPIDC.jl", #'/bin/sh -c \"pwd && ls -lah'"
                         inputPath, outPath, '\"']) #for singularity

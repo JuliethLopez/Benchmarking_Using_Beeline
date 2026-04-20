@@ -48,6 +48,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-t', '--time', action="store_true", default=False,
       help="Analyze time taken by each algorithm for a.\n")
     
+    parser.add_argument('-mem', '--memory', action="store_true", default=False,
+      help="Analyze memory usage by each algorithm for a.\n")
+    
     parser.add_argument('-e', '--epr', action="store_true", default=False,
       help="Compute median early precision.")
     
@@ -120,6 +123,13 @@ def main():
         TimeDict = evalSummarizer.parseTime()
         pd.DataFrame(TimeDict).to_csv(outDir+'Times.csv')
     
+    # Compute median memory usage
+    if (opts.memory):
+        print('\n\nComputing memory usage...')
+
+        MemoryDict = evalSummarizer.parseMemory()
+        pd.DataFrame(MemoryDict).to_csv(outDir+'Memory.csv')
+    
     # Compute early precision
     if (opts.epr):
         print('\n\nComputing early precision values...')
@@ -134,7 +144,7 @@ def main():
         actDF.to_csv(outDir + "EPr-Activation.csv")
         inhDF.to_csv(outDir + "EPr-Inhibitory.csv")
 
-    # Compute median time taken
+    # Compute motifs
     if (opts.motifs):
         print('\n\nComputing network motifs...')
 
