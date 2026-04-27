@@ -43,7 +43,7 @@ input_settings:
               
         - name: "PIDC"
           params: 
-              should_run: [True]
+              should_run: [False]
               
 
         - name: "GRNBOOST2"
@@ -70,7 +70,7 @@ input_settings:
               
         - name: "hdWGCNA"
           params:
-              should_run: [False]
+              should_run: [True]
               run_tf: [False]
               nThreads: [8] # number of threads to use
               nVariableFeatures: [2000]

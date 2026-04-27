@@ -188,6 +188,11 @@ if(n_cells > 1000){
   seurat_obj <- ScaleMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
   seurat_obj <- RunPCAMetacells(seurat_obj, features=VariableFeatures(seurat_obj))
 
+  # look for metacells object
+  print("Object with metacells calculated:")
+  print(seurat_obj@misc$hdWGCNA$wgcna_metacell_obj)
+  #saveRDS(seurat_obj, file.path(outdir,"metacells.RDS"))
+
   print("Saving PCA plot with metacells")
   plot_pca <- DimPlotMetacells(seurat_obj, reduction="pca")
   ggsave(filename = file.path(outdir,"pca_metacells.png") , plot=plot_pca)
