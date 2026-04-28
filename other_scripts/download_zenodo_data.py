@@ -11,6 +11,8 @@ download(record_or_doi = "10.5281/zenodo.5909090", output_dir="/lustre/scratch12
 # (Li et al., 2025) https://zenodo.org/records/15711227
 # We will use subsets of PBMCs. Those are monocytes, DC, B, CD4 T
 download(record_or_doi = "10.5281/zenodo.15711227", output_dir="/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/15711227")
+# the reference is here
+download(record_or_doi = "10.5281/zenodo.15720607", output_dir="/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/15720607")
 
 # (Pratapa et al., 2020) https://zenodo.org/records/19009603
 # We will use hHep, hESC
