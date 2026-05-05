@@ -476,11 +476,11 @@ def main():
     if (opts.overview):
         print('\n\nGenerating overview plot...')
 
-        #TODO add option to select overview columns
+        #To add option to select overview columns
         #resType = ['AUPRC Ratio','Early Precision Ratio']
         #resTypeFileName = [ 'AUPRC', 'EPr']
-        resType = ['AUPRC Ratio', 'Stability Across Datasets']
-        resTypeFileName = [ 'AUPRC', 'Jaccard']
+        resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
+        resTypeFileName = [ 'AUPRC', 'Jaccard', 'EPr']
         
         # Store results from each dataset in a dictionary and
         # then convert it to a dataframe.

@@ -62,17 +62,6 @@ print(paste0("networkType:", networkType))
 print(paste0("soft_power:", soft_power))
 print(paste0("Delete_grey_modules:", delete_grey_module))
 
-# Remove old Tom files to ensure not loading of old results
-files <- c(
-  Sys.glob("blockwiseTOM*.RData"),
-  Sys.glob("individualTOM*.RData")
-)
-
-if (length(files) > 0) {
-  message("Removing old WGCNA TOM files")
-  file.remove(files)
-}
-
 # optionally enable multithreading
 enableWGCNAThreads(nThreads = nThreads)
 
@@ -84,6 +73,17 @@ print(paste0("outdir:", outdir))
 outdir_TOM <- file.path(dirname(outFile), "TOM")
 if(!dir.exists(outdir_TOM)) dir.create(outdir_TOM, recursive = TRUE)
 print(paste0("TOM folder:", outdir_TOM))
+
+# Remove old Tom files to ensure not loading of old results
+files <- c(
+  Sys.glob(file.path(outdir_TOM,"blockwiseTOM*.RData")),
+  Sys.glob(file.path(outdir_TOM,"individualTOM*.RData"))
+)
+
+if (length(files) > 0) {
+  message("Removing old WGCNA TOM files")
+  file.remove(files)
+}
 
 # input expression data
 #print("Prove locations!")
@@ -169,7 +169,7 @@ seurat_obj <- SetupForWGCNA(
 
 
 # metacells
-if(n_cells > 1000){
+if(n_cells > 20000){
   print("Creating metacells per cluster")
   seurat_obj <- MetacellsByGroups(
     seurat_obj = seurat_obj,
@@ -273,22 +273,80 @@ dev.off()
 power_table <- GetPowerTable(seurat_obj)
 write_csv2(power_table, file = file.path(outdir,"power_table.csv"))
 
+# select first high soft power value
+scale_free_topology = power_table$SFT.R.sq
+names(scale_free_topology) = power_table$Power
+
+select_soft_power <- function(lista) {
+  # if there is only one value
+  if (length(lista) == 1) {
+    return(as.numeric(names(lista)[1]))
+  }
+  else {
+    # for several values take the minimum with free scale score higher than 0.8, if not, select the first maximum
+    if (any(lista > 0.8)){
+      valid = lista[lista > 0.8]
+      idx = which.min(valid)
+      return(as.numeric(names(valid)[idx]))
+    } else {
+      # first maximum
+      for (i in 2:length(lista)) {
+        if (lista[i] < lista[i - 1]) {
+          soft_power = names(lista)[i - 1]
+          return(as.numeric(soft_power))
+        }
+      }
+      # if the value never decreases, use the maximum of all
+      soft_power = names(lista)[lista==max(lista)]
+      return(as.numeric(soft_power))
+    }
+  }  
+}
+
+if (soft_power == 0) {
+  print("Soft_power is cero... Calculating soft power...")
+  
+  soft_power = as.numeric(select_soft_power(scale_free_topology))
+  print("Soft power set to first maximum value:")
+  print(soft_power)
+}
+
 # Construct co-expression network. This function calls blockwiseConsensusModules, which uses the parameter minModuleSize for minimum module size for module detection. This value by default is 20, however given the small number of genes we have in total, it is required a smaller value.
-
 print("Min module size set to:")
-print(ceiling(length(variable_features)/2))
+min_module_size = floor(length(variable_features)/2)
+print(min_module_size)
 
-seurat_obj <- ConstructNetwork(
-  seurat_obj,
-  soft_power = soft_power,
-  tom_name = 'metacells', # name of the topoligical overlap matrix written to disk
-  overwrite_tom = TRUE,
-  tom_outdir = outdir_TOM,
-  minModuleSize = ceiling(length(variable_features)/2)
-)
+# Try different soft_power
+soft_power_try <- soft_power
+success <- FALSE
 
-# get TOM (tarda bastante tiempo)
-#TOM <- GetTOM(seurat_obj)
+while (soft_power_try >= 1 && !success) {
+
+  message(paste("Trying soft power:", soft_power_try))
+
+  tryCatch({
+
+    seurat_obj <- ConstructNetwork(
+      seurat_obj,
+      soft_power = soft_power_try,
+      tom_name = 'metacells', # name of the topoligical overlap matrix written to disk
+      overwrite_tom = TRUE,
+      tom_outdir = outdir_TOM,
+      minModuleSize = min_module_size
+    )
+
+    success <- TRUE
+    message(paste("Success with soft power:", soft_power_try))
+
+  }, error = function(e) {
+
+    message(paste("Failed with soft power:", soft_power_try))
+    message("Error:", e$message)
+
+    soft_power_try <- soft_power_try - 1
+  })
+}
+
 
 # PLot dendrogram
 png(file.path(outdir, "Dendogram_tom_metacells.png"))
@@ -355,7 +413,7 @@ if(run_tf==TRUE){
     objective = 'reg:squarederror',
     max_depth = 1,
     eta = 0.1,
-    nthread=16,
+    nthread=4,
     alpha=0.5
   )
 
@@ -376,21 +434,44 @@ if(run_tf==TRUE){
   #nongrey_genes <- modules[modules$module!="grey","gene_name"]
 
   # load TOM matrix
-  tom_path = file.path(outdir_TOM,"metacells_TOM.rda")
-  
-  if (file.exists(tom_path)==TRUE) {
-    print(paste0("Loading TOM matrix file from: ", tom_path))
-    load(tom_path)
-  } else {
-    tom_path = file.path(outdir_TOM,"metacells_block.1.rda")
-    print(paste0("Loading TOM matrix file from: ", tom_path))
-    load(tom_path)
-  }
+  tom_path <- file.path(outdir_TOM, "metacells_TOM.rda")
+  #tom_path2 <- file.path(outdir_TOM, "metacells_block.1.rda")
+
+  # repeat {
+  #   if (file.exists(tom_path1)) {
+  #     tom_path <- tom_path1
+  #     break
+  #   } else {
+  #     if (file.exists(tom_path2)) {
+  #       tom_path <- tom_path2
+  #       break
+  #     }
+  #   }
+  # }
+
+  print(paste0("Waiting for TOM file: ", tom_path))
+
+  repeat {
+    if (file.exists(tom_path)) {
+      s1 <- file.info(tom_path)$size
+      Sys.sleep(3)
+      s2 <- file.info(tom_path)$size
+      if (!is.na(s1) && s1 == s2) break
+    } else {
+      Sys.sleep(3)
+      }
+    }
+
+  print(paste0("Loading TOM matrix file from: ", tom_path))
+  load(tom_path)
+  #TOM <- GetTOM(seurat_obj) # do not works well because the folder in container do not match with real location
   print("TOM matrix loaded successfully")
   
+  # TOM as matrix
   TOM <- 1 - as.matrix(consTomDS)
   rownames(TOM) <- gene_name
   colnames(TOM) <- gene_name
+
   # filter grey modules
   TOM <- TOM[nongrey_genes, nongrey_genes]
   edges <- which(TOM>0, arr.ind=TRUE) #filter according to edge strength. As this could overstimate the result of this method in the benchmarking, only used the minimum value, 0

@@ -1,15 +1,3 @@
-# Run pcor using spearman's correlation as mentioned in the PNI paper
-#pcorResults=  pcor(x= t(as.matrix(inputExpr)), method = "spearman")
-
-# Write output to a file
-#DF = data.frame(Gene1 = geneNames[c(row(pcorResults$estimate))], Gene2 = geneNames[c(col(pcorResults$estimate))]
-#                , corVal = c(pcorResults$estimate), pValue =  c(pcorResults$p.value))
-#outDF <- DF[order(DF$corVal, decreasing=TRUE), ]
-#write.table(outDF, outFile, sep = "\t", quote = FALSE, row.names = FALSE)
-
-# Donde se define outDF como argumento de ppcor??
-
-##########################################################################################
 # Link to paper: https://doi.org/10.1093/bioinformatics/btac117
 # Tutorial: https://inferelator.readthedocs.io/en/latest/
 
@@ -27,7 +15,6 @@ from inferelator import inferelator_workflow, inferelator_verbose_level, MPContr
 
 # Set verbosity level to "Talky"
 inferelator_verbose_level(1)
-
 
 def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -52,6 +39,8 @@ def get_parser() -> argparse.ArgumentParser:
         help='Path to output file')
     parser.add_argument('--num_bootstraps', type=int, default=2,
         help='Number of bootstraps for cross-validation')
+    parser.add_argument('--cross_val',
+        help='To do crossvalidation, True or False')
     parser.add_argument('--count_minimum', type=float, default=0.05,
         help='Minimum count threshold for filtering genes')
     parser.add_argument('--random_seed_min', type=int, default=42,
@@ -74,13 +63,16 @@ def set_up_workflow(args):
     opts = parse_arguments()
     
     # Start Multiprocessing Engine
-    n_cores_local = 8
+    n_cores_local = int(os.environ.get("LSB_DJOB_NUMPROC", 1))
+    print(f"Detected CPUs from LSF: {n_cores_local}")
+    
     local_engine = True
 
     # Multiprocessing uses the pathos implementation of multiprocessing (with dill instead of cPickle)
     # This is suited for a single computer, but will likely be too slow for the example here
     if __name__ == '__main__' and local_engine:
-        MPControl.set_multiprocess_engine("multiprocessing")
+        #MPControl.set_multiprocess_engine("multiprocessing")
+        MPControl.set_multiprocess_engine("local")  # thread-based better for singularity container
         MPControl.client.processes = n_cores_local
         MPControl.connect()
 
@@ -98,7 +90,7 @@ def set_up_workflow(args):
     #                        expression_matrix_metadata=METADATA_COLUMNS,
     #                        expression_matrix_columns_are_genes=True,
     #                        gene_list_index="SystematicName")
-    wkf.set_crossvalidation_parameters(split_gold_standard_for_crossvalidation=False, #here we use all gold standard for evaluation
+    wkf.set_crossvalidation_parameters(split_gold_standard_for_crossvalidation=opts.cross_val, #here we use all gold standard for evaluation
                                        cv_split_ratio=0.5)
     wkf.set_run_parameters(num_bootstraps=opts.num_bootstraps)
     wkf.set_count_minimum(opts.count_minimum)
@@ -136,21 +128,39 @@ def main(args):
     worker.set_tfa(tfa_driver=False) #not to use prior information
     worker.append_to_path('output_dir', 'not_imputation_not_prior')
 
-    cross_validation(worker).run()
-
-    # Read crossvalidation performance results
-    cv_results = pd.read_csv(f"{opts.output_dir}not_imputation_not_prior/crossvalidation_performance.tsv", sep='\t')
-    cv_results = cv_results.sort_values(by=["MCC","F1"], ascending=[False,False])
+    # run
+    if opts.cross_val == True:
+        # run method
+        cross_validation(worker).run()
+    else:
+        # run method
+        worker.run()
     
-    # select the best random seed
-    random_seed_selection = int(cv_results.iloc[0]["random_seed"])
-    print(f"Best random seed: {random_seed_selection}")
+    # select and save results
+    if opts.cross_val == True:
+        # select random seed
+        if opts.random_seed_selection==0:
+            print("Random seed is cero... Selecting the best one...")
+            # Read crossvalidation performance results
+            cv_results = pd.read_csv(f"{opts.output_dir}not_imputation_not_prior/crossvalidation_performance.tsv", sep='\t')
+            cv_results = cv_results.sort_values(by=["MCC","F1"], ascending=[False,False])
+            
+            # select the best random seed
+            random_seed_selection = int(cv_results.iloc[0]["random_seed"])
+            print(f"Best random seed: {random_seed_selection}")
+            folder_results = f"random_seed_{random_seed_selection}"
+        else:
+            print(f"Using random seed: {opts.random_seed_selection}")
+            folder_results = f"random_seed_{opts.random_seed_selection}"
 
-    #folder_results = f"random_seed_{opts.random_seed_selection}"
-    folder_results = f"random_seed_{random_seed_selection}"
-    final_folder = f"{opts.output_dir}/not_imputation_not_prior/{folder_results}"
-    Path(final_folder).mkdir(parents=True, exist_ok=True) #check if folder/path exist, if not creste them
+        # save the folder with selected random seed
+        final_folder = f"{opts.output_dir}/not_imputation_not_prior/{folder_results}"
+        Path(final_folder).mkdir(parents=True, exist_ok=True) #check if folder/path exist, if not creste them
 
+    else:
+        # define final folder
+        final_folder = f"{opts.output_dir}not_imputation_not_prior"
+    
     network_output_name = f'{final_folder}/network.tsv.gz'
     network_output = pd.read_csv(network_output_name, sep='\t', index_col=None)
 

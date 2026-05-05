@@ -82,6 +82,7 @@ def run(RunnerObj):
     #output_dir = "/" + outDir
 
     num_bootstraps = int(RunnerObj.params['num_bootstraps'])
+    cross_val = str(RunnerObj.params['cross_val'])
     count_minimum = float(RunnerObj.params['count_minimum'])
     random_seed_min = int(RunnerObj.params['random_seed_min'])
     random_seed_selection = int(RunnerObj.params['random_seed_selection'])
@@ -131,6 +132,7 @@ def run(RunnerObj):
         f"--output_dir=/data/{outDir} "
         f"--out_file=/data/{outPath} "
         f"--num_bootstraps={num_bootstraps} "
+        f"--cross_val={cross_val} "
         f"--count_minimum={count_minimum} "
         f"--random_seed_min={random_seed_min} "
         f"--random_seed_max={random_seed_max} "
