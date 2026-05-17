@@ -25,7 +25,7 @@ def get_parser() -> argparse.ArgumentParser:
         help='Path to output directory where results will be saved')
     parser.add_argument('--expression_file', #EXPRESSION_FILE_NAME
         help='Path to ExpressionData file')
-    parser.add_argument('--ref_net_file', #NETWORK_PRIOR
+    parser.add_argument('--ref_net_file', #GOLD STANDARD, COULD BE USED THE NETWORK_PRIOR
         help='Path to refNetwork file')
     parser.add_argument('--gene_metadata_file_name',
         help='File with gene metadata: example SystematicName, GeneName, etc.')
@@ -33,7 +33,7 @@ def get_parser() -> argparse.ArgumentParser:
         help='Metadata columns to extract from expression matrix')
     parser.add_argument('--ref_net_tf_names', #TF_NAMES
         help='Path to the names of TF from refNetwork')
-    parser.add_argument('--priori_net_file', #PRIORI_NET
+    parser.add_argument('--priori_net_file', #PRIORI_NET IF KNOWN, IF NOT CREATE A DUMMI FILE WITH THE SAME FORMAT AS REFNETWORK BUT WITH ALL ZEROS, THEN THE ALGORITHM WILL NOT USE PRIOR INFORMATION
         help='Path to priors file, if available. If not, set to None or refNetwork file')
     parser.add_argument('--out_file',
         help='Path to output file')
@@ -82,7 +82,7 @@ def set_up_workflow(args):
                        output_dir=opts.output_dir,
                        expression_matrix_file=opts.expression_file,
                        gene_metadata_file=opts.gene_metadata_file_name,
-                       gold_standard_file=opts.ref_net_file,
+                       gold_standard_file=None, #opts.ref_net_file,
                        priors_file=opts.priori_net_file,
                        tf_names_file=opts.ref_net_tf_names) # in this case is possible to use the reference list due to is used in the beggining to create sintetic network
     # Set metadata columns
@@ -125,7 +125,8 @@ def main(args):
     # with cross validation evaluation using gold standard
     worker = set_up_workflow(args)
     #worker.set_shuffle_parameters(shuffle_prior_axis=0) # shuffle prior and alter biological meaning
-    worker.set_tfa(tfa_driver=False) #not to use prior information
+    worker.set_network_data_flags(use_no_gold_standard=True) #not to use gold standard for evaluation, use all gold standard for evaluation
+    worker.set_tfa(tfa_driver=False) #not use prior information, then not calculate transcription factor activity
     worker.append_to_path('output_dir', 'not_imputation_not_prior')
 
     # run

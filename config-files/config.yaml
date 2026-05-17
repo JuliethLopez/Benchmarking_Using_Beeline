@@ -6,7 +6,7 @@ input_settings:
     input_dir: "inputs"
 
     # Subdirectory of inputs that datasets are placed in
-    dataset_dir: "example"
+    dataset_dir: "Curated"
 
     # Denotes a list of datasets, each with the following parameters:
     #   name: Name of the dataset. May be used in logging or other
@@ -27,6 +27,21 @@ input_settings:
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "refNetwork.csv"
+    datasets:
+        - name: "HSC"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+    datasets:
+        - name: "VSC"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
+    datasets:
+        - name: "mCAD"
+          exprData: "ExpressionData.csv"
+          cellData: "PseudoTime.csv"
+          trueEdges: "refNetwork.csv"
 
     # Denotes a list of algorithms to run. Each has the following parameters:
     #   name: Name of the algorithm. Must be recognized by the pipeline, see
@@ -42,7 +57,7 @@ input_settings:
               
         - name: "PIDC"
           params: 
-              should_run: [False] #True
+              should_run: [True]
 
 
         - name: "GRNVBEM"
@@ -59,12 +74,12 @@ input_settings:
               
         - name: "GRNBOOST2"
           params: 
-              should_run: [False] #True
+              should_run: [True]
               
               
         - name: "PPCOR"
           params: 
-              should_run: [False] #True
+              should_run: [True]
               # p-value cutoff
               # Used in parsing output
               pVal: [0.01]
@@ -148,27 +163,48 @@ input_settings:
 
         - name: "INFERELATOR"
           params:
-              should_run: [True] #True
-              num_bootstraps: [2]
-              count_minimum: [0.05]
-              random_seed_min: [42]
-              random_seed_max: [45]
-              random_seed_selection: [42]
+              should_run: [True]
+              use_priors: [False] # whether or not to use prior information, if False, then not calculate transcription factor activity
+              ref_net_tf_list: ["list_TF.csv"] # list of TFs in the reference network
+              num_bootstraps: [100] #The number of bootstraps to run
+              count_minimum: [0.05] #The mean expression value which is required to retain a gene for modeling
+              cross_val: [False] #To do or not crossvalidation
+              random_seed_min: [40] #The minimum random number seed to use
+              random_seed_max: [45] #The maximum random number seed to use
+              random_seed_selection: [0] #The random number seed to use for selection
+        
               
-        - name: "TF_hdWGCNA"
+        - name: "hdWGCNA" # if number of cells is higher than 20.000, metacells are computed 
           params:
-              should_run: [False] #True
-              # number of threads to use
-              nThreads: [64]
+              should_run: [True]
+              run_tf: [False]
+              nThreads: [4] # number of threads to use
               nVariableFeatures: [2000]
               clustering_resolution: [0.5]
-              metacells_k: [5] # nearest-neighbors parameter in MetacellsByGroups fuction
+              metacells_k: [25] # nearest-neighbors parameter in MetacellsByGroups fuction. 25 by default in the fuction
+              min_cells_per_metacell: [20] # minimum number of cells per metacell in MetacellsByGroups function. 100 by default in the function
+              max_shared_cells: [10] # maximum number of shared cells between two metacells in MetacellsByGroups function. 15 by default in the function
               networkType: ["signed"] # WGCNA network type in TestSoftPowers function
-              soft_power: [10] # WGCNA soft-thresholding power in ConstructNetwork function
+              soft_power: [0] # WGCNA soft-thresholding power in ConstructNetwork function
+              delete_grey_module: [True]
+
+        # - name: "TF_hdWGCNA"
+        #   params:
+        #       should_run: [False]
+        #       run_tf: [True]
+        #       nThreads: [8] # number of threads to use
+        #       nVariableFeatures: [2000]
+        #       clustering_resolution: [0.5]
+        #       metacells_k: [25] # nearest-neighbors parameter in MetacellsByGroups fuction. 25 by default in the fuction
+        #       min_cells_per_metacell: [20] # minimum number of cells per metacell in MetacellsByGroups function. 100 by default in the function
+        #       max_shared_cells: [10] # maximum number of shared cells between two metacells in MetacellsByGroups function. 15 by default in the function
+        #       networkType: ["signed"] # WGCNA network type in TestSoftPowers function
+        #       soft_power: [10] # WGCNA soft-thresholding power in ConstructNetwork function
+        #       delete_grey_module: [True]
 
 # Output Settings: initialize base output folder names
 output_settings:
 
     # Base output directory
     output_dir: "outputs"
-    output_prefix: "GSD"
+    output_prefix: ""

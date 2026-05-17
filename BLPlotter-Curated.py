@@ -411,17 +411,18 @@ def COplot(inputDF, width = 12, height = 7, randValues = [], shape = [],
     
     
     for levlIdx in range(len(levls)):
-        # Add color range legend
-        ax = plt.subplot2grid((2*maxRows + 3, len(levls)), (2*maxRows + 2, levlIdx))
-        plt.subplots_adjust(left=0.4, right=0.6)
-        ax.imshow(np.arange(len(palettes[levlIdx])).reshape(1, len(palettes[levlIdx])),
+        ax_leg = plt.subplot2grid((2*maxRows + 3, len(levls)), (2*maxRows + 2, levlIdx))
+        ax_leg.imshow(np.arange(len(palettes[levlIdx])).reshape(1, len(palettes[levlIdx])),
               cmap=mpl.colors.ListedColormap(list(palettes[levlIdx])),
               interpolation="nearest", aspect="auto")        
-        ax.yaxis.set_ticks_position('none') 
-        ax.xaxis.set_ticks_position('none')
-        ax.set_yticklabels([]) 
-        ax.set_xticks([0.5, len(palettes[levlIdx]) - 2])
-        ax.set_xticklabels(['Low/Poor', 'High/Good'], fontsize=16)  
+        ax_leg.yaxis.set_ticks_position('none') 
+        ax_leg.xaxis.set_ticks_position('none')
+        ax_leg.set_yticklabels([]) 
+        ax_leg.set_xticks([0.5, len(palettes[levlIdx]) - 2])
+        ax_leg.set_xticklabels(['Low/Poor', 'High/Good'], fontsize=16)  
+
+    # CHANGED: Global layout handling shifted to the end of the plotting logic
+    plt.subplots_adjust(bottom=0.15, hspace=0.6)
 
 def main():
     opts = parse_arguments()
@@ -462,12 +463,12 @@ def main():
         print('\n\nGenerating AUPRC boxplot...')
         boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'AUPRC', 'AUPRC')
 
-    # Generate AUROC boxplot     
+    # Generate AUROC boxplot
     if (opts.auroc):
         print('\n\nGenerating AUROC boxplot...')
         boxplot(opts, evalConfigs, datasets, 0.5, 'AUROC', 'AUROC')
         
-    # Generate EPr boxplot     
+    # Generate EPr boxplot
     if (opts.epr):
         print('\n\nGenerating Early Precision boxplot...')
         boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr', 'Early Precision')
@@ -476,12 +477,23 @@ def main():
     if (opts.overview):
         print('\n\nGenerating overview plot...')
 
-        #To add option to select overview columns
-        #resType = ['AUPRC Ratio','Early Precision Ratio']
-        #resTypeFileName = [ 'AUPRC', 'EPr']
-        resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
-        resTypeFileName = [ 'AUPRC', 'Jaccard', 'EPr']
+        #---To add option to select overview columns---
+        # # methods without borda
+        #resType = ['Memory','Times']
+        #resTypeFileName = ['Memory','Times']
         
+        # undirected metrics
+        resType = ['AUPRC Ratio', 'AUROC Ratio','Early Precision Ratio', 'Stability Across Datasets', 'Stability between runs']
+        resTypeFileName = ['AUPRC-undirected', 'AUROC-undirected', 'EPr-undirected', 'Jaccard', 'Spearman']
+        
+        # # directed metrics
+        # resType = ['AUPRC Ratio', 'AUROC Ratio','Early Precision Ratio']
+        # resTypeFileName = ['AUPRC-directed', 'AUROC-directed', 'EPr-directed']
+        
+        # # motifs
+        # resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI']
+        # resTypeFileName = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
+
         # Store results from each dataset in a dictionary and
         # then convert it to a dataframe.
         Res = {}
@@ -491,7 +503,13 @@ def main():
         for res in resType:
             for dataset in datasets:
                 multIndTuple.append((res,dataset))
-                
+        
+        print("Reading result files and computing overview values...")
+        print(str(evalConfigs[0].output_settings.base_dir) + '/' \
+                              + str(evalConfigs[0].input_settings.datadir).split("inputs")[1] + '/' \
+                              + str(evalConfigs[0].output_settings.output_prefix) \
+                              + '-' + resTypeFileName[0] + '.csv')
+
         ResDF = pd.read_csv(str(evalConfigs[0].output_settings.base_dir) + '/' \
                               + str(evalConfigs[0].input_settings.datadir).split("inputs")[1] + '/' \
                               + str(evalConfigs[0].output_settings.output_prefix) \
@@ -514,35 +532,73 @@ def main():
                 for alg in algs:
                     # If early precision, compute the Early Precision Ratio (EPR)
                     # by dividing the values by that of a random predictor
-                    if res == 'Early Precision Ratio' or res == 'AUPRC Ratio':
+                    if "Ratio" in res:
                         overviewDF.loc[alg][res,dataset] =  ResDF[alg].median()/randPredictor[dataset]
-                    elif res == 'Stability Across Datasets' or res == 'Jaccard':
+                    elif 'Stability' in res:
                         overviewDF.loc[alg][res,dataset] =  ResDF.iloc[0][alg]
+                    elif res == 'Memory':
+                        overviewDF.loc[alg][res,dataset] =  ResDF.median()/1048576 # Convertir a GB
                     else:
-        
                         overviewDF.loc[alg][res,dataset] =  ResDF[alg].median()
         
-        overviewDF = overviewDF.loc[overviewDF['AUPRC Ratio'].median(axis='columns').sort_values().index]
+        # cleanign and order
+        overviewDF = overviewDF.dropna(how='all')
+        #overviewDF = overviewDF.sort_values(by=(resType[0]), ascending=True)
         
+        # undirected 
+        overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']).iloc[::-1]
+        
+        # # memory, time
+        # overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA']).iloc[::-1]
+        
+        # # directed, motifs
+        # overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
+        
+        print(overviewDF)
+
         pale1 = sns.cubehelix_palette(11, dark=1, light = 0)
-        pale2 = sns.color_palette("plasma_r",11)
+        pale2 = sns.color_palette("plasma_r",11) #color invertido
         pale3 = sns.color_palette("viridis",11)
         pale3h = sns.cubehelix_palette(11, reverse = True)#[2:]
         pale3r = sns.color_palette("magma",11)
-        pale4 = sns.color_palette("magma_r",13)[:-2]
-        pale5 = sns.cubehelix_palette(rot=-0.3,n_colors = 11)
-        pale5 = sns.color_palette('cividis_r', n_colors = 12)[:-1]
+        pale4 = sns.color_palette("magma_r",13)[:-2] #color invertido
+        pale5 = sns.cubehelix_palette(rot=-0.3,n_colors = 11) #color invertido
+        pale5r = sns.color_palette('cividis_r', n_colors = 12)[:-1]
+        pale_bi = sns.color_palette("coolwarm", 11)
         #fig, ax = plt.subplots(figsize=(40, 30))
+        
+        # ---Parameter values for CoPlot---
+        # Precision metrics
+        rand_values = [0, 0.5, 0, 0, 0.5]
+        shape_list = ['hm', 'hm', 'hm', 'hm', 'hm']
+        palettes_list = [pale3, pale3h, pale3r, pale5r, pale1]
+        rotation_list = [45, 45, 45, 45, 45]
+        switch_list = [False, False, False, True, False]
+
+        # # memory and time for methods without borda
+        # rand_values = [0, 0]
+        # shape_list = ['hm', 'hm']
+        # palettes_list = [pale5r, pale5]
+        # rotation_list = [45, 45]
+        # switch_list = [False, False]
+
+        # # motifs
+        # rand_values = [1, 1, 1]
+        # shape_list = ['arrow', 'arrow', 'arrow']
+        # palettes_list = [pale1, pale1, pale1]
+        # rotation_list = [45, 45, 45]
+        # switch_list = [False, False, False]
+
         COplot(
             overviewDF, 
-            width=10 * len(evalConfigs) + 1, 
+            width=30 * len(evalConfigs) + 1, 
             height=len(algs) + 5, 
-            randValues=[1, 0, 0, 0],
-            shape=['hm', 'hm', 'hm', 'arrow'], 
-            palettes=[pale3, pale3h, pale5, pale3r],
+            randValues=rand_values,
+            shape=shape_list, 
+            palettes=palettes_list,
             levels=resType,  
-            rotation=[0, 0, 0, 0],
-            switch=[False, False, True, False]
+            rotation=rotation_list,
+            switch=switch_list,
         )
         #plt.suptitle(" / ".join(resType), fontsize=20, y=0.98)
         sns.set_context("paper")  # Try "paper", "notebook", or set manually
@@ -557,8 +613,8 @@ def main():
                 label.set_ha('right')
                 label.set_fontsize(12)
         
-        file = opts.output + '/' \
-                + '-'.join([str(c.output_settings.output_prefix) for c in evalConfigs]) + '-overview.pdf'
+        db_prefix = ([str(c.output_settings.output_prefix) for c in evalConfigs])[0]
+        file = f"{opts.output}/{db_prefix}_overview_{'_'.join(resTypeFileName)}.pdf"
         print("Overview plot saved to " + file)
         plt.savefig(file)
 

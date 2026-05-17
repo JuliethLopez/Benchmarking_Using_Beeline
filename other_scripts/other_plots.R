@@ -57,12 +57,27 @@ times_plot <- ggplot(plot_df, aes(x = CellNumber, y = Runtime, color = Method, g
     color = "Cells"
   ) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 18, face = "bold"),
+    plot.subtitle = element_text(size = 14, face = "bold"),
+    plot.background = element_rect(fill="white"),
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14, face = "bold"),
     strip.background = element_rect(fill = "gray90"),
-    strip.text = element_text(face = "bold")
+    strip.text = element_text(face = "bold", size = 14),
+    legend.title = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 12, face = "bold"),
+    panel.spacing = unit(0.2, "lines") # Adjusts spacing between cell_number blocks
   )
 
 ggsave(times_plot, filename = "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated/Method_Runtimes.png", width = 12, height = 8)
+
+tab_dat <- plot_df %>%
+  group_by(Dataset, Method) %>%
+  summarise(Avg_time = round(mean(Runtime, na.rm = TRUE),2)) %>%
+  pivot_wider(names_from = Dataset, values_from = Avg_time)
+tab_dat
 
 
 # ----------------------------motifs plot--------------------------------
@@ -136,13 +151,21 @@ p <- ggplot(plot_df_non_borda, aes(x = cell_number, y = method_data, fill = Moti
     y = "Method"
   ) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 18, face = "bold"),
+    plot.subtitle = element_text(size = 14, face = "bold"),
+    plot.background = element_rect(fill="white"),
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14, face = "bold"),
     strip.background = element_rect(fill = "gray90"),
-    strip.text = element_text(face = "bold", size = 10),
+    strip.text = element_text(face = "bold", size = 14),
+    legend.title = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 12, face = "bold"),
     panel.spacing = unit(0.2, "lines") # Adjusts spacing between cell_number blocks
   )
 
-ggsave(p, filename = paste0("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated/Heatmap_Motifs.jpeg"), width = 12, height = 8)
+ggsave(p, filename = paste0("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated/Heatmap_Motifs.png"), width = 12, height = 8)
 
 
 # ----------------------------memory plot--------------------------------
@@ -191,7 +214,7 @@ plot_df$Method <- factor(plot_df$Method, levels = method_order)
 
 # Heatmap of motifs scores
 plot_df_non_borda <- subset(plot_df, Method %in% method_order)
-plot_df_non_borda$Runtime_GB <- plot_df_non_borda$Runtime/1000000 # convert to GB
+plot_df_non_borda$Runtime_GB <- plot_df_non_borda$Runtime/1048576 # convert to GB
 
 # plot
 memory_plot <- ggplot(plot_df_non_borda, aes(x = CellNumber, y = Runtime_GB, color = Method, group = Method)) +
@@ -205,12 +228,29 @@ memory_plot <- ggplot(plot_df_non_borda, aes(x = CellNumber, y = Runtime_GB, col
     subtitle = "Faceted by Method, colored by Cell Number",
     x = "Dataset",
     y = "Average Memory Usage (GB)",
-    color = "Cells"
+    color = "Method"
   ) +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(size = 18, face = "bold"),
+    plot.subtitle = element_text(size = 14, face = "bold"),
+    plot.background = element_rect(fill="white"),
+    axis.title.x = element_text(size = 14, face = "bold"),
+    axis.title.y = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14, face = "bold"),
     strip.background = element_rect(fill = "gray90"),
-    strip.text = element_text(face = "bold")
+    strip.text = element_text(face = "bold", size = 14),
+    legend.title = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 12, face = "bold"),
+    panel.spacing = unit(0.2, "lines") # Adjusts spacing between cell_number blocks
   )
 
 ggsave(memory_plot, filename = "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated/Method_Memory.png", width = 12, height = 8)
+
+
+# table per dataset
+tab_dat <- plot_df_non_borda %>%
+  group_by(Dataset, Method) %>%
+  summarise(Avg_Memory_GB = round(mean(Runtime_GB, na.rm = TRUE),2)) %>%
+  pivot_wider(names_from = Dataset, values_from = Avg_Memory_GB)
+tab_dat

@@ -62,13 +62,15 @@ input_settings:
         - name: "INFERELATOR"
           params:
               should_run: [True]
+              use_priors: [False] # whether or not to use prior information, if False, then not calculate transcription factor activity
+              ref_net_tf_list: ["list_TF.csv"] # list of TFs in the reference network
               num_bootstraps: [100] #The number of bootstraps to run
               count_minimum: [0.05] #The mean expression value which is required to retain a gene for modeling
               cross_val: [False] #To do or not crossvalidation
               random_seed_min: [40] #The minimum random number seed to use
               random_seed_max: [45] #The maximum random number seed to use
               random_seed_selection: [0] #The random number seed to use for selection
-              
+            
               
         - name: "hdWGCNA" # if number of cells is higher than 20.000, metacells are computed 
           params:
@@ -97,19 +99,6 @@ input_settings:
         #       networkType: ["signed"] # WGCNA network type in TestSoftPowers function
         #       soft_power: [10] # WGCNA soft-thresholding power in ConstructNetwork function
         #       delete_grey_module: [True]
-
-        # - name: "BORDA"
-        #   params:
-        #       should_run: [False]
-        # - name: "mBORDA"
-        #   params:
-        #       should_run: [False]
-        # - name: "sBORDA"
-        #   params:
-        #       should_run: [False]
-        # - name: "smBORDA"
-        #   params:
-        #       should_run: [False]
               
 # Output Settings: initialize base output folder names
 output_settings:

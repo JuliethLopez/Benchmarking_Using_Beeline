@@ -23,36 +23,118 @@ def generateInputs(RunnerObj):
         # Write .csv file
         ExpressionData.T.to_csv(RunnerObj.inputDir.joinpath("INFERELATOR/ExpressionData.tsv"),
                              sep = '\t', header  = True, index = True)
-        
+
+
     if not RunnerObj.inputDir.joinpath("INFERELATOR/refNetwork.tsv").exists():
-        refNetworkData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.trueEdges),
-                                     header = 0, index_col = None)
+        ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
+                                     header = 0, index_col = 0)
         
+        # read reference network data
+        refNetworkData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.trueEdges),
+                                    header = 0, index_col = None)
+    
         # Convert simbols to numbers
-        refNetworkData['Type_binary'] = [1 if i == '+' else -1 if i == '-' else 0 for i in refNetworkData.Type]
-        # file to long format
-        short_df = refNetworkData.pivot_table(index='Gene2', columns='Gene1', values='Type_binary').reset_index() #TF,gene,type of conection
-        short_df = short_df.fillna(0)
-        short_df = short_df.rename_axis(None, axis=1)
-        # pass from float to int
-        short_df.iloc[:, 1:] = short_df.iloc[:, 1:].fillna(0).astype(int)
-        short_df = short_df.rename(columns={short_df.columns[0]: "Gene1/Gene2"})
+        #refNetworkData['Type_binary'] = [1 if i == '+' else -1 if i == '-' else 0 for i in refNetworkData.Type]
+        
+        # Get all unique TFs (The "Sources" / Columns)
+        all_tfs = refNetworkData['Gene1'].unique()
+
+        # Get all unique Genes from Expression data (The "Targets" / Rows)
+        all_genes = ExpressionData.index
+
+        # Create matrix with the correct dimensions and fill it
+        prior_df = pd.DataFrame(0, index=all_genes, columns=all_tfs)
+        for _, row in refNetworkData.iterrows():
+            # row['Gene1'] is the TF (Column)
+            # row['Gene2'] is the Target (Row)
+            # Convert '+' to 1, '-' to -1
+            val = 1 if row['Type'] == '+' else -1
+            prior_df.at[row['Gene2'], row['Gene1']] = val
+
+        prior_df.index.name = "Gene1/Gene2"
+        prior_df = prior_df.reset_index()
+        prior_df.iloc[:, 1:] = prior_df.iloc[:, 1:].fillna(0).astype(int)
+        # prior_df = prior_df.rename(columns={prior_df.columns[0]: "Gene1/Gene2"})
+        
+        # # file to long format
+        # short_df = refNetworkData.pivot_table(index='Gene2', columns='Gene1', values='Type_binary').reset_index() #TF,gene,type of conection
+        # short_df = short_df.fillna(0)
+        # short_df = short_df.rename_axis(None, axis=1)
+        # # pass from float to int
+        # short_df.iloc[:, 1:] = short_df.iloc[:, 1:].fillna(0).astype(int)
+        # short_df = short_df.rename(columns={short_df.columns[0]: "Gene1/Gene2"})
         
         # Write reference network data in INFERELATOR folder
-        short_df.to_csv(RunnerObj.inputDir.joinpath("INFERELATOR/refNetwork.tsv"),
+        prior_df.to_csv(RunnerObj.inputDir.joinpath("INFERELATOR/refNetwork.tsv"),
+                        sep="\t", index=False, header=True)
+
+
+    if not RunnerObj.inputDir.joinpath("INFERELATOR/priori.tsv").exists():
+        ExpressionData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.exprData),
+                                     header = 0, index_col = 0)
+        refNetworkData_TF = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.params["ref_net_tf_list"]),
+                                        header = None, index_col = None)
+        
+        if RunnerObj.params['use_priors'] == False:
+            # Create an empty matrix (all zeros)
+            # Rows = All Genes in experiment, Columns = All TFs
+            tf_list = refNetworkData_TF.iloc[:, 0].tolist()
+
+            # Use prior_df name to keep consistency with the saving line
+            prior_df = pd.DataFrame(0, index=ExpressionData.index, columns=tf_list)
+            prior_df.index.name = "Gene1/Gene2"
+            prior_df = prior_df.reset_index()
+        else:
+            # read reference network data
+            refNetworkData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.trueEdges),
+                                     header = 0, index_col = None)
+        
+            # Convert simbols to numbers
+            #refNetworkData['Type_binary'] = [1 if i == '+' else -1 if i == '-' else 0 for i in refNetworkData.Type]
+            
+            # Get all unique TFs (The "Sources" / Columns)
+            all_tfs = refNetworkData['Gene1'].unique()
+
+            # Get all unique Genes from Expression data (The "Targets" / Rows)
+            all_genes = ExpressionData.index
+
+            # Create matrix with the correct dimensions and fill it
+            prior_df = pd.DataFrame(0, index=all_genes, columns=all_tfs)
+            for _, row in refNetworkData.iterrows():
+                # row['Gene1'] is the TF (Column)
+                # row['Gene2'] is the Target (Row)
+                # Convert '+' to 1, '-' to -1
+                val = 1 if row['Type'] == '+' else -1
+                prior_df.at[row['Gene2'], row['Gene1']] = val
+
+            prior_df.index.name = "Gene1/Gene2"
+            prior_df = prior_df.reset_index()
+            prior_df.iloc[:, 1:] = prior_df.iloc[:, 1:].fillna(0).astype(int)
+            # prior_df = prior_df.rename(columns={prior_df.columns[0]: "Gene1/Gene2"})
+            
+            # # file to long format
+            # short_df = refNetworkData.pivot_table(index='Gene2', columns='Gene1', values='Type_binary').reset_index() #TF,gene,type of conection
+            # short_df = short_df.fillna(0)
+            # short_df = short_df.rename_axis(None, axis=1)
+            # # pass from float to int
+            # short_df.iloc[:, 1:] = short_df.iloc[:, 1:].fillna(0).astype(int)
+            # short_df = short_df.rename(columns={short_df.columns[0]: "Gene1/Gene2"})
+            
+        # Write reference network data in INFERELATOR folder
+        prior_df.to_csv(RunnerObj.inputDir.joinpath("INFERELATOR/priori.tsv"),
                         sep="\t", index=False, header=True)
     
-    if not RunnerObj.inputDir.joinpath("INFERELATOR/refNetwork_TF.tsv").exists():
-        refNetworkData = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.trueEdges),
-                                     header = 0, index_col = None)
+    if not RunnerObj.inputDir.joinpath("INFERELATOR/list_TF.tsv").exists():
+        refNetworkData_TF = pd.read_csv(RunnerObj.inputDir.joinpath(RunnerObj.params["ref_net_tf_list"]),
+                                        header = None, index_col = None)
         # Select transcription factors
-        refNetworkData_TF = refNetworkData.Gene1.unique()
-        refNetworkData_TF = pd.DataFrame(refNetworkData_TF, columns=['Gene1'])
+        #refNetworkData_TF = refNetworkData.Gene1.unique()
+        refNetworkData_TF = pd.DataFrame(refNetworkData_TF.iloc[:, 0])
 
         # Write TF network data in INFERELATOR folder
-        refNetworkData_TF.to_csv(RunnerObj.inputDir.joinpath("INFERELATOR/refNetwork_TF.tsv"),
-                             sep = '\t', index=False, header=False)
-    
+        refNetworkData_TF.to_csv(RunnerObj.inputDir.joinpath("INFERELATOR/list_TF.tsv"),
+                            sep = '\t', index=False, header=False)
+
     
 def run(RunnerObj):
     '''
@@ -71,9 +153,12 @@ def run(RunnerObj):
 
     # Get path for refNetwork.tsv generated in INFERELATOR folder for certain type of network in inputs
     refNetworkPath = f"{inputDir}/INFERELATOR/refNetwork.tsv"
+
+    # Get path for priori.tsv generated in INFERELATOR folder for certain type of network in inputs
+    prioriPath = f"{inputDir}/INFERELATOR/priori.tsv"
     
-    # Get path for refNetwork_TF.tsv generated in INFERELATOR folder for certain type of network in inputs
-    refNetworkTFPath = f"{inputDir}/INFERELATOR/refNetwork_TF.tsv"
+    # Get path for list_TF.tsv generated in INFERELATOR folder for certain type of network in inputs
+    refNetworkTFPath = f"{inputDir}/INFERELATOR/list_TF.tsv"
 
     # make output dirs if they do not exist:
     outDir = "outputs/"+str(RunnerObj.inputDir).split("inputs/")[1]+"/INFERELATOR/"
@@ -111,7 +196,7 @@ def run(RunnerObj):
     #    '--expression_file=' + expressionDataPath,
     #    '--ref_net_file=' + refNetworkPath,
     #    '--ref_net_tf_names=' + refNetworkTFPath,
-    #    '--priori_net_file=' + refNetworkPath,
+    #    '--priori_net_file=' + prioriPath,
     #    '--output_dir=' + outDir,
     #    '--out_file=' + outPath, '\"'])
     #    #'> data/' + str(outDir) + 'console_output.txt 2>&1\"'])
@@ -128,7 +213,7 @@ def run(RunnerObj):
         f"--expression_file={expressionDataPath} "
         f"--ref_net_file={refNetworkPath} "
         f"--ref_net_tf_names={refNetworkTFPath} "
-        f"--priori_net_file={refNetworkPath} "
+        f"--priori_net_file={prioriPath} "
         f"--output_dir=/data/{outDir} "
         f"--out_file=/data/{outPath} "
         f"--num_bootstraps={num_bootstraps} "

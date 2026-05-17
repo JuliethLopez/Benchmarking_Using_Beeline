@@ -9,6 +9,7 @@ from sklearn.metrics import precision_recall_curve, roc_curve, auc
 from itertools import product, permutations, combinations, combinations_with_replacement
 from tqdm import tqdm
 import networkx as nx
+from joblib import Parallel, delayed # Added for parallelization
 
 def Motifs(datasetDict, inputSettings):
     '''
