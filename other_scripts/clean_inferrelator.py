@@ -1,3 +1,8 @@
+# Este código se utilizó para limpiar resultados de una corrida previa en donde se utilizaban
+# diferentes semillas. Debido a que no se necesitaban semillas se dejó únicamente una y 
+# se utilizaron las diferentes réplicas
+
+
 import os
 import shutil
 import pandas as pd
