@@ -179,7 +179,7 @@ def COplot(inputDF, width = 12, height = 7, randValues = [], shape = [],
 
     Indices = [""] + list(rowNames)  +  [""]
 
-    ax_main.set_yticklabels(Indices, fontsize=22, fontweight='bold')
+    ax_main.set_yticklabels(Indices, fontsize=30, fontweight='bold')
     ax_main.spines['top'].set_visible(False)
     ax_main.spines['right'].set_visible(False)
     ax_main.spines['bottom'].set_visible(False)
@@ -217,7 +217,7 @@ def COplot(inputDF, width = 12, height = 7, randValues = [], shape = [],
         # Plot metric column headers
         header_x = colStart + (len(colNames) / 2.0) + 0.5
         plt.text(header_x, maxRows + 2, 
-                        levls[levlIdx], fontsize=20, rotation=rotation[levlIdx],
+                        levls[levlIdx], fontsize=30, rotation=rotation[levlIdx],
                         fontweight='bold',
                         ha="center", va="center",
                         bbox=dict(boxstyle="round",
@@ -228,7 +228,7 @@ def COplot(inputDF, width = 12, height = 7, randValues = [], shape = [],
 
                 # Plot dataset column headers
                 plt.text(colStart + colIdx + 1, maxRows + 1, colNames[colIdx],
-                         fontsize=18, rotation=rotation[levlIdx],
+                         fontsize=25, rotation=rotation[levlIdx],
                          ha="center", va="center",
                          bbox=dict(boxstyle="round",
                          ec=(1,1,1,0),
@@ -428,7 +428,7 @@ def COplot(inputDF, width = 12, height = 7, randValues = [], shape = [],
         ax_leg.xaxis.set_ticks_position('none')
         ax_leg.set_yticklabels([]) 
         ax_leg.set_xticks([0.5, len(palettes[levlIdx]) - 2])
-        ax_leg.set_xticklabels(['Low/Poor', 'High/Good'], fontsize=16, fontweight='bold')  
+        ax_leg.set_xticklabels(['Low/Poor', 'High/Good'], fontsize=20, fontweight='bold')  
 
         # Progress the starting grid location for the next legend subplot block
         leg_start_col += current_span
@@ -477,6 +477,10 @@ def main():
     # 3. Setup Metrics for Heatmap
     resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
     resTypeFileName = ['AUPRC-undirected', 'Jaccard', 'EPr-undirected']
+    #resType = ['Stability Across Datasets','Stability Across Runs'] 
+    #resTypeFileName = ['Jaccard', 'Spearman']
+    #resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
+    #resTypeFileName = ['AUPRC-directed', 'Jaccard', 'EPr-directed']
     # resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI'] #MEJOR USAR OTHER_PLOTS.R o CUrated-sin grupos
     # resTypeFileName = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
     # resType = ['Memory', 'Time'] #MEJOR USAR OTHER_PLOTS.R
@@ -546,11 +550,18 @@ def main():
     
     # ---Parameter values for CoPlot---
     # Precision metrics
-    rand_values = [0, 0.5, 0.5]
+    rand_values = [0, 0, 0]
     shape_list = ['hm', 'hm', 'hm']
     palettes_list = [pale3, pale3h, pale3r]
     rotation_list = [0, 0, 0]
     switch_list = [False, False, False]
+
+    # # Fidelity
+    # rand_values = [0, 0]
+    # shape_list = ['hm', 'hm']
+    # palettes_list = [pale3, pale3h]
+    # rotation_list = [0, 0]
+    # switch_list = [False, False]
 
     # # memory and time for methods without borda
     # rand_values = [0, 0]

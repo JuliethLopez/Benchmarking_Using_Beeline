@@ -54,20 +54,20 @@ times_plot <- ggplot(plot_df, aes(x = CellNumber, y = Runtime, color = Method, g
     subtitle = "Faceted by Method, colored by Cell Number",
     x = "Dataset",
     y = "Average Execution Time (seconds)",
-    color = "Cells"
+    color = "Method"
   ) +
   theme(
-    plot.title = element_text(size = 18, face = "bold"),
-    plot.subtitle = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 25, face = "bold"),
+    plot.subtitle = element_text(size = 22, face = "bold"),
     plot.background = element_rect(fill="white"),
-    axis.title.x = element_text(size = 14, face = "bold"),
-    axis.title.y = element_text(size = 14, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"),
-    axis.text.y = element_text(size = 14, face = "bold"),
+    axis.title.x = element_text(size = 20, face = "bold"),
+    axis.title.y = element_text(size = 20, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 18, face = "bold"),
+    axis.text.y = element_text(size = 18, face = "bold"),
     strip.background = element_rect(fill = "gray90"),
-    strip.text = element_text(face = "bold", size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    legend.text = element_text(size = 12, face = "bold"),
+    strip.text = element_text(face = "bold", size = 16),
+    legend.title = element_text(size = 18, face = "bold"),
+    legend.text = element_text(size = 16, face = "bold"),
     panel.spacing = unit(0.2, "lines") # Adjusts spacing between cell_number blocks
   )
 
@@ -142,26 +142,26 @@ p <- ggplot(plot_df_non_borda, aes(x = cell_number, y = method_data, fill = Moti
   geom_tile(color = "white") +  # color adds a border between tiles
   # creates the grouping: cell_number on top, split by Motif_type below
   facet_grid(. ~ Motif_type, scales = "free_x", space = "free_x") +
-  scale_fill_gradient2(low = "darkblue", mid = "white", high = "darkred", midpoint = 1, name = "Raw Score") +
+  scale_fill_gradient2(low = "darkblue", mid = "white", high = "darkred", midpoint = 1, name = "Score") +
   theme_minimal() +
   labs(
     title = "Heatmap of Motif Scores",
     subtitle = "Grouped by Cell Number and Motif Type",
     x = "Motif Type",
-    y = "Method"
+    y = "Method dataset"
   ) +
   theme(
-    plot.title = element_text(size = 18, face = "bold"),
-    plot.subtitle = element_text(size = 14, face = "bold"),
+    plot.title = element_text(size = 22, face = "bold"),
+    plot.subtitle = element_text(size = 20, face = "bold"),
     plot.background = element_rect(fill="white"),
-    axis.title.x = element_text(size = 14, face = "bold"),
-    axis.title.y = element_text(size = 14, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14, face = "bold"),
-    axis.text.y = element_text(size = 14, face = "bold"),
+    axis.title.x = element_text(size = 18, face = "bold"),
+    axis.title.y = element_text(size = 18, face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 16, face = "bold"),
+    axis.text.y = element_text(size = 16, face = "bold"),
     strip.background = element_rect(fill = "gray90"),
     strip.text = element_text(face = "bold", size = 14),
-    legend.title = element_text(size = 14, face = "bold"),
-    legend.text = element_text(size = 12, face = "bold"),
+    legend.title = element_text(size = 18, face = "bold"),
+    legend.text = element_text(size = 16, face = "bold"),
     panel.spacing = unit(0.2, "lines") # Adjusts spacing between cell_number blocks
   )
 
@@ -254,3 +254,46 @@ tab_dat <- plot_df_non_borda %>%
   summarise(Avg_Memory_GB = round(mean(Runtime_GB, na.rm = TRUE),2)) %>%
   pivot_wider(names_from = Dataset, values_from = Avg_Memory_GB)
 tab_dat
+
+
+# Check if all the possible edges exists in the infered networks, lets take GSD-2000-1 for example
+datasets <- c("GSD")
+methods <- c("GRNBOOST2", "hdWGCNA", "INFERELATOR", "PIDC", "PPCOR")
+
+ref_network <- read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/Curated/GSD/GSD-200-1/refNetwork.csv")
+all_genes <- unique(c(ref_network$Gene1, ref_network$Gene2))
+all_edges <- matrix(0, length(all_genes), length(all_genes), dimnames = list(all_genes, all_genes))
+
+for (name in 1:length(datasets)){
+  for (method in methods){
+    path <- paste0("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/Curated/", datasets[name], "/", datasets[name], "-2000-1/",method, "/rankedEdges.csv")
+    data <- read.csv(path, sep="\t")
+    
+    # Count edge occurrences
+    for (i in 1:nrow(data)) {
+      
+      g1 <- data$Gene1[i]
+      g2 <- data$Gene2[i]
+      value <- data$EdgeWeight[i]
+      
+      if (value!=0){
+        all_edges[g1, g2] <- all_edges[g1, g2] + 1
+      } else {print(paste(i,method))}
+    }
+  }
+}
+
+# Transform matrix into dataframe
+edge_df <- as.data.frame(as.table(all_edges))
+
+colnames(edge_df) <- c("Gene1", "Gene2", "Count")
+sum(edge_df$Count==0)
+
+
+#borda boxplot
+borda <- read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated/Borda.csv")
+head(borda)
+
+pdf("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/mi_grafica.pdf", width = 8, height = 8)
+boxplot(borda[,3:6])
+dev.off()

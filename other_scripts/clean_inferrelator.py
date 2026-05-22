@@ -54,3 +54,40 @@ for method in methods:
 
             except Exception as e:
                 print(f"Error in {method}-{n_cell}-{rep}: {e}")
+
+
+## Filter WGCNA
+setwd("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline")
+datasets <- c("GSD", "HSC", "mCAD", "VSC")
+cell_number <- c(2000, 1000, 200)
+
+for (name in 1:length(datasets)) {
+  for (ncell in 1:length(cell_number)) {
+    for (rep in 1:100) {
+      current_cells <- cell_number[ncell]
+      
+      path_input <- paste0(
+        "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/Curated/", 
+        datasets[name], "/", datasets[name], "-", current_cells, "-", rep, "/hdWGCNA/outFile.txt"
+      )
+
+      path_save <- paste0(
+        "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/Curated/", 
+        datasets[name], "/", datasets[name], "-", current_cells, "-", rep, "/hdWGCNA/rankedEdges.csv"
+      )
+      
+      if (file.exists(path_input)) {
+        #print(paste("Processing:", path))
+        
+        data <- read.delim(path_input, header = TRUE, sep = "\t")
+        
+        data$EdgeWeight[data$EdgeWeight < 0.2] <- 0
+        
+        write.table(data, path_save, sep = "\t", row.names = FALSE, quote = FALSE)
+        
+      } else {
+        warning(paste("File missing, skipping:", path_input))
+      }
+    }
+  }
+}

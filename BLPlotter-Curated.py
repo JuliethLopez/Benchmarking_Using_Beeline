@@ -487,8 +487,8 @@ def main():
         resTypeFileName = ['AUPRC-undirected', 'AUROC-undirected', 'EPr-undirected', 'Jaccard', 'Spearman']
         
         # # directed metrics
-        # resType = ['AUPRC Ratio', 'AUROC Ratio','Early Precision Ratio']
-        # resTypeFileName = ['AUPRC-directed', 'AUROC-directed', 'EPr-directed']
+        #resType = ['AUPRC Ratio', 'AUROC Ratio','Early Precision Ratio']
+        #resTypeFileName = ['AUPRC-directed', 'AUROC-directed', 'EPr-directed']
         
         # # motifs
         # resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI']
@@ -546,13 +546,13 @@ def main():
         #overviewDF = overviewDF.sort_values(by=(resType[0]), ascending=True)
         
         # undirected 
-        overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']).iloc[::-1]
+        #overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']).iloc[::-1]
         
         # # memory, time
         # overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA']).iloc[::-1]
         
         # # directed, motifs
-        # overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
+        overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
         
         print(overviewDF)
 

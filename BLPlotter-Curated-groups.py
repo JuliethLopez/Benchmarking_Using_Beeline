@@ -323,10 +323,10 @@ def main():
         #resSuffixes = ['AUPRC-directed', 'AUROC-directed', 'EPr-directed']
         #resType = ['Early Precision Ratio (Inhibitory)', 'Early Precision Ratio (Activation)'] #pale3, pale3h, randvalues 0,0
         #resSuffixes = ['EPr-Inhibitory', 'EPr-Activation']
-        #resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI'] #arrow, arrow, arrow, randvalues 0 #MEJOR USAR OTHER_PLOTS.R o CUrated-sin grupos
-        #resSuffixes = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
-        resType = ['Memory', 'Time'] #pale5r, pale5, randvalues 0, 0 #MEJOR USAR OTHER_PLOTS.R
-        resSuffixes = ['Memory', 'Times']
+        resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI'] #arrow, arrow, arrow, randvalues 0 #MEJOR USAR OTHER_PLOTS.R o CUrated-sin grupos
+        resSuffixes = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
+        #resType = ['Memory', 'Time'] #pale5r, pale5, randvalues 0, 0 #MEJOR USAR OTHER_PLOTS.R
+        #resSuffixes = ['Memory', 'Times']
         
         cell_groups = ['200', '1000', '2000']
         
@@ -383,7 +383,7 @@ def main():
         # memory, time
         #overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA']).iloc[::-1]
         #directed, motifs
-        #overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
+        overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
         print("DataFrame para Overview Heatmap (limpio y ordenado):")
         print(overviewDF)
             
@@ -400,16 +400,39 @@ def main():
         pale5r = sns.color_palette('cividis_r', n_colors = 12)[:-1]
         pale_bi = sns.color_palette("coolwarm", 11)
 
+        # ---Parameter values for CoPlot---
+        # # Precision metrics
+        # rand_values = [0, 0.5, 0.5]
+        # shape_list = ['hm', 'hm', 'hm']
+        # palettes_list = [pale3, pale3h, pale3r]
+        # rotation_list = [0, 0, 0]
+        # switch_list = [False, False, False]
+
+        # # memory and time for methods without borda
+        # rand_values = [0, 0]
+        # shape_list = ['hm', 'hm']
+        # palettes_list = [pale5r, pale5]
+        # rotation_list = [45, 45]
+        # switch_list = [True, True]
+
+        # motifs
+        rand_values = [1, 1, 1]
+        shape_list = ['arrow', 'arrow', 'arrow']
+        palettes_list = [pale1, pale1, pale1]
+        rotation_list = [45, 45, 45]
+        switch_list = [False, False, False]
+
+
         COplot(
             overviewDF, 
             width=16, # Un poco más ancho para acomodar nombres y escalas
             height=len(overviewDF) * 0.7 + 6, 
-            randValues=[0,0], # Valores de random predictor para cada métrica. Todos los que calculan el radio toman 1 como random value
-            shape=['hm', 'hm'], # modos: hm = heatmap, c = circle, s = square, rs = rounded square, w = wedge, b = bar, f = full square, text = value text, arrow = up/down/neutral arrows
-            palettes=[pale5r, pale5],
+            randValues=rand_values, # Valores de random predictor para cada métrica. Todos los que calculan el radio toman 1 como random value
+            shape=shape_list, # modos: hm = heatmap, c = circle, s = square, rs = rounded square, w = wedge, b = bar, f = full square, text = value text, arrow = up/down/neutral arrows
+            palettes=palettes_list,
             levels=resType,  
-            rotation=[0, 0], # rotate labels
-            switch=[False, False] # invert text color in graphic
+            rotation=rotation_list, # rotate labels
+            switch=switch_list # invert text color in graphic
         )
         
         output_name = f"{opts.output}/{db_prefix}_grouped_overview_{'_'.join(resSuffixes)}.pdf"

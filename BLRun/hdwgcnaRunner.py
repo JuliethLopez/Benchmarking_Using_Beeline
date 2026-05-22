@@ -101,4 +101,7 @@ def parseOutput(RunnerObj):
     else:
         outFile = OutDF[['Gene1', 'Gene2', 'EdgeWeight']].copy()
     
+    # Filter
+    outFile <- outFile[outFile['EdgeWeight'] < 0.2] = 0
+
     outFile.to_csv(f'{outDir}/rankedEdges.csv', sep='\t', index=False)
