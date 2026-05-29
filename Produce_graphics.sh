@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "Generating graphics for Curated networks..."
 
+# overview, boxplots
 python BLPlotter-Curated-groups.py --config config-files/config_mCAD.yaml -o /lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated -v -a -r -e
 python BLPlotter-Curated-groups.py --config config-files/config_GSD.yaml -o /lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated -v -a -r -e
 python BLPlotter-Curated-groups.py --config config-files/config_VSC.yaml -o /lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated -v -a -r -e

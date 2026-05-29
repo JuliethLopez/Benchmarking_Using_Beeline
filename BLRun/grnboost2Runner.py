@@ -39,13 +39,23 @@ def run(RunnerObj):
     #                     'grnbeeline/arboreto:base /bin/sh -c \"time -v -o', "data/" + str(outDir) + 'time.txt', 
     #                     'python runArboreto.py --algo=GRNBoost2',
     #                     '--inFile='+inputPath, '--outFile='+outPath, '\"']) # for docker
-    cmdToRun = ' '.join(['/software/singularity/3.11.4//bin/singularity exec --cleanenv -B',
-                        str(Path.cwd()) + ':/data/',
-                        str(Path.cwd() / 'Algorithms/ARBORETO/arboreto_1.0.sif'),
-                        '/bin/sh -c \"time -v -o',
-                        "/data/" + str(outDir) + 'time.txt',
-                        'python /data/Algorithms/ARBORETO/runArboreto.py --algo=GRNBoost2', #'/bin/sh -c \"pwd && ls -lah'
-                        '--inFile='+inputPath, '--outFile='+outPath, '\"']) #for singularity
+
+    n_cpus = os.environ.get("LSB_DJOB_NUMPROC", "1")
+    os.environ["SINGULARITYENV_LSB_DJOB_NUMPROC"] = str(n_cpus)
+
+    cmdToRun = (
+            "/software/singularity/3.11.4/bin/singularity exec --cleanenv "
+            f"-B {str(Path.cwd())}:/data "
+            f"{str(Path.cwd())}/Algorithms/ARBORETO/arboreto_1.0.sif "
+            f'/bin/sh -c \"'
+            f"time -v -o /data/{outDir}time.txt "
+            f"python /data/Algorithms/ARBORETO/runArboreto.py "
+            f"--algo=GRNBoost2 "
+            f"--inFile={inputPath} "
+            f"--outFile={outPath}"
+            "\""
+        )
+    
     print(cmdToRun)
     os.system(cmdToRun)
 

@@ -36,13 +36,20 @@ def run(RunnerObj):
     #                     "data/" + str(outDir) + 'time.txt', 'julia runPIDC.jl',
     #                     inputPath, outPath, '\"'])
     
-    cmdToRun = ' '.join(['/software/singularity/3.11.4//bin/singularity exec -B',
-                        str(Path.cwd()) + ':/data/',
-                        str(Path.cwd() / 'Algorithms/PIDC/pidc_1.0.sif'),
-                        '/bin/sh -c \"time -v -o' #"/usr/bin/time" '-v -o'
-                        "/data/" + str(outDir) + 'time.txt',
-                        "julia /data/Algorithms/PIDC/runPIDC.jl", #'/bin/sh -c \"pwd && ls -lah'"
-                        inputPath, outPath, '\"']) #for singularity
+    n_cpus = os.environ.get("LSB_DJOB_NUMPROC", "1")
+    os.environ["SINGULARITYENV_LSB_DJOB_NUMPROC"] = str(n_cpus)
+
+    cmdToRun = (
+            "/software/singularity/3.11.4/bin/singularity exec --cleanenv "
+            f"-B {str(Path.cwd())}:/data "
+            f"{str(Path.cwd())}/Algorithms/PIDC/pidc_1.0.sif "
+            f'/bin/sh -c \"'
+            f"time -v -o /data/{outDir}time.txt "
+            f"julia -t {n_cpus} /data/Algorithms/PIDC/runPIDC.jl "
+            f"{inputPath} "
+            f"{outPath}"
+            "\""
+        )
 
     print(cmdToRun)
     os.system(cmdToRun)

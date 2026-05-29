@@ -86,7 +86,7 @@ for (name in 1:length(datasets)) {
         
         data <- read.delim(path_input, header = TRUE, sep = "\t")
         
-        data$EdgeWeight[data$EdgeWeight < 0.2] <- 0
+        #data$EdgeWeight[data$EdgeWeight < 0.2] <- 0
         
         write.table(data, path_save, sep = "\t", row.names = FALSE, quote = FALSE)
         

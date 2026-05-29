@@ -1,6 +1,7 @@
 # Borda order
 import os
 import pandas as pd
+import numpy as np
 
 # Define rute
 all_datasets = ['GSD','HSC','mCAD','VSC'] # 
@@ -25,4 +26,9 @@ for dataset in all_datasets:
                 os.makedirs(method_folder,exist_ok=True)
                 method_df = borda_df[['Gene1','Gene2',method]]
                 method_df.columns = ['Gene1','Gene2','EdgeWeight']
+                # this filter is applied because the network is full connected
+                # take the 20% higher connections. As ranks are used, better connections have lower values
+                #threshold = np.quantile(method_df['EdgeWeight'], 0.2, axis=1)
+                #method_df['EdgeWeight'] = [0 if x > threshold else x for x in method_df['EdgeWeight']]
+                # save
                 method_df.to_csv(f'{method_folder}/rankedEdges.csv', sep='\t', index=False)

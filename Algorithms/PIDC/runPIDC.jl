@@ -4,8 +4,10 @@ print("RUNNING PIDC!!!!!")
 
 using NetworkInference
 using LightGraphs
+using Base.Threads
 
 println("RUNNING PIDC correctly!!!!!")
+println("Running with ", Threads.nthreads(), " threads.") # Verify multi-threading
 
 algorithm = PIDCNetworkInference()
 

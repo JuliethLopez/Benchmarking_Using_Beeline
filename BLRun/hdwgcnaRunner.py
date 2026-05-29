@@ -59,15 +59,30 @@ def run(RunnerObj):
     #                     inputPath, 
     #                     outPath, '\"'])
 
-    cmdToRun = ' '.join(['/software/singularity/3.11.4//bin/singularity exec --cleanenv -B',
-                        str(Path.cwd()) + ':/data',
-                        str(Path.cwd() / 'Algorithms/TF_hdWGCNA/tf_hdwgcna_1.0.sif'),
-                        #'/bin/sh -c "echo OK > /data/'+ str(outDir) +'test2.txt"'
-                        '/bin/sh -c \"time -v -o',
-                        '/data/' + str(outDir) + 'time.txt',
-                        'Rscript /data/Algorithms/TF_hdWGCNA/runTF_hdWGCNA.R',
-                        inputPath, outPath, 
-                        run_tf, nThreads, nVariableFeatures, clustering_resolution, metacells_k, min_cells_per_metacell, max_shared_cells, networkType, soft_power, delete_grey_module, '\"']) # for singularity
+    n_cpus = os.environ.get("LSB_DJOB_NUMPROC", "1")
+    os.environ["SINGULARITYENV_LSB_DJOB_NUMPROC"] = str(n_cpus)
+
+    cmdToRun = (
+            "/software/singularity/3.11.4/bin/singularity exec --cleanenv "
+            f"-B {str(Path.cwd())}:/data "
+            f"{str(Path.cwd())}/Algorithms/TF_hdWGCNA/tf_hdwgcna_1.0.sif "
+            f'/bin/sh -c \"'
+            f"time -v -o /data/{outDir}time.txt "
+            f"Rscript /data/Algorithms/TF_hdWGCNA/runTF_hdWGCNA.R "
+            f"{inputPath} " 
+            f"{outPath} "
+            f"{run_tf} "
+            f"{nThreads} "
+            f"{nVariableFeatures} "
+            f"{clustering_resolution} "
+            f"{metacells_k} "
+            f"{min_cells_per_metacell} "
+            f"{max_shared_cells} "
+            f"{networkType} "
+            f"{soft_power} "
+            f"{delete_grey_module}"
+            "\""
+        )
 
     print(cmdToRun)
     os.system(cmdToRun)
@@ -101,7 +116,5 @@ def parseOutput(RunnerObj):
     else:
         outFile = OutDF[['Gene1', 'Gene2', 'EdgeWeight']].copy()
     
-    # Filter
-    outFile <- outFile[outFile['EdgeWeight'] < 0.2] = 0
-
+    # Save output
     outFile.to_csv(f'{outDir}/rankedEdges.csv', sep='\t', index=False)

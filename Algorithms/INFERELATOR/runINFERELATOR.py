@@ -71,8 +71,7 @@ def set_up_workflow(args):
     # Multiprocessing uses the pathos implementation of multiprocessing (with dill instead of cPickle)
     # This is suited for a single computer, but will likely be too slow for the example here
     if __name__ == '__main__' and local_engine:
-        #MPControl.set_multiprocess_engine("multiprocessing")
-        MPControl.set_multiprocess_engine("local")  # thread-based better for singularity container
+        MPControl.set_multiprocess_engine("multiprocessing")  # local thread-based better for singularity container
         MPControl.client.processes = n_cores_local
         MPControl.connect()
 

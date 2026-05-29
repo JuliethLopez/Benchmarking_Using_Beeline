@@ -201,6 +201,9 @@ def run(RunnerObj):
     #    '--out_file=' + outPath, '\"'])
     #    #'> data/' + str(outDir) + 'console_output.txt 2>&1\"'])
 
+    n_cpus = os.environ.get("LSB_DJOB_NUMPROC", "1")
+    os.environ["SINGULARITYENV_LSB_DJOB_NUMPROC"] = str(n_cpus)
+
     cmdToRun = (
         "/software/singularity/3.11.4/bin/singularity exec --cleanenv "
         f"-B {str(Path.cwd())}:/data "

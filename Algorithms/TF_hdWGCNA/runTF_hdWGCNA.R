@@ -157,8 +157,7 @@ ggsave(file.path(outdir, "UMAP_clustering.png"), plot4)
 
 
 # se podría filtrar genes expresados en al menos el 5% de las células, pero para las pruebas con redes simuladas no funciona
-print("All variable features")
-print(variable_features)
+print(paste0("All variable features: ", length(variable_features)))
 seurat_obj <- SetupForWGCNA(
   seurat_object,
   gene_select = "fraction", # the gene selection approach, custom
@@ -169,7 +168,7 @@ seurat_obj <- SetupForWGCNA(
 
 
 # metacells
-if(n_cells > 20000){
+if(n_cells > 6000){
   print("Creating metacells per cluster")
   seurat_obj <- MetacellsByGroups(
     seurat_obj = seurat_obj,
@@ -242,7 +241,7 @@ if(n_cells > 20000){
   # wgcna_name <- seurat_obj@misc$active_wgcna
   # seurat_obj@misc[[wgcna_name]]$datExpr
 } else {
-  paste0("The number of cells (", n_cells, ") is not higher than 1000. Metacells may not be reliable with low cell numbers, so metacells will not be calculated. Using full Seurat object.")
+  paste0("The number of cells (", n_cells, ") is not higher than 6000. Metacells may not be reliable with low cell numbers, so metacells will not be calculated. Using full Seurat object.")
   
   seurat_obj$dummy_group <- "all"
 
@@ -313,7 +312,10 @@ if (soft_power == 0) {
 
 # Construct co-expression network. This function calls blockwiseConsensusModules, which uses the parameter minModuleSize for minimum module size for module detection. This value by default is 20, however given the small number of genes we have in total, it is required a smaller value.
 print("Min module size set to:")
-min_module_size = floor(length(variable_features)/2)
+if (length(variable_features) < nVariableFeatures){
+  min_module_size = floor(length(variable_features)/2)
+  
+} else {min_module_size = 20}
 print(min_module_size)
 
 # Try different soft_power
@@ -413,7 +415,7 @@ if(run_tf==TRUE){
     objective = 'reg:squarederror',
     max_depth = 1,
     eta = 0.1,
-    nthread=4,
+    nthread=nThreads,
     alpha=0.5
   )
 
@@ -468,7 +470,7 @@ if(run_tf==TRUE){
   print("TOM matrix loaded successfully")
   
   # TOM as matrix
-  TOM <- 1 - as.matrix(consTomDS)
+  TOM <- 1 - as.matrix(consTomDS) # as this is a distance object "TOM dissimilarity", is it necessary to tranform the data to obtain node connections
   rownames(TOM) <- gene_name
   colnames(TOM) <- gene_name
 
@@ -483,11 +485,17 @@ if(run_tf==TRUE){
     Gene2 = colnames(TOM)[edges[,2]],
     EdgeWeight = TOM[edges]
   )
+  results_filt <- results[order(results$EdgeWeight),]
+  #print("Keep more connected edges")
+  #threshold <- 0.6**soft_power_try
+  #results_filt$EdgeWeight[results_filt$EdgeWeight < threshold] = 0
+  #threshold <- quantile(results$EdgeWeight, probs = 0.8)
+  #results_filt$EdgeWeight[results_filt$EdgeWeight < threshold] = 0
 }
 
 # --------------Write output to a file-----------------
 
 print("This are the results GetTFNetwork")
-print(head(results))
+print(head(results_filt))
 
-write.table(results, outFile, sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(results_filt, outFile, sep = "\t", quote = FALSE, row.names = FALSE)
