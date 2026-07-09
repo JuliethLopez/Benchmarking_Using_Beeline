@@ -96,10 +96,15 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
      
     for i, dataset in enumerate(datasets):
         DF = DFs[i]
-        modifiedDF = pd.melt(DF, id_vars=['dataset'], 
-        # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
-        # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
-        value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'])
+                                     
+        if "undirected" in resTypeFile:
+            # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
+            # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
+            value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
+        else:
+            value_vars=['GRNBOOST2', 'INFERELATOR']
+        
+        modifiedDF = pd.melt(DF, id_vars = ['dataset'], value_vars = value_vars)
         
         conditions = [
             modifiedDF['dataset'].str.contains('-200-'),
@@ -475,12 +480,12 @@ def main():
         print(f"Random Predictor for {ds_name}: {randPredictor[ds_name]:.4f}")
 
     # 3. Setup Metrics for Heatmap
-    resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
-    resTypeFileName = ['AUPRC-undirected', 'Jaccard', 'EPr-undirected']
-    #resType = ['Stability Across Datasets','Stability Across Runs'] 
-    #resTypeFileName = ['Jaccard', 'Spearman']
-    #resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
-    #resTypeFileName = ['AUPRC-directed', 'Jaccard', 'EPr-directed']
+    # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
+    # resTypeFileName = ['AUPRC-undirected', 'Jaccard', 'EPr-undirected']
+    resType = ['Stability Across Datasets','Stability Across Runs'] 
+    resTypeFileName = ['Jaccard', 'Spearman']
+    # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
+    # resTypeFileName = ['AUPRC-directed', 'Jaccard', 'EPr-directed']
     # resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI'] #MEJOR USAR OTHER_PLOTS.R o CUrated-sin grupos
     # resTypeFileName = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
     # resType = ['Memory', 'Time'] #MEJOR USAR OTHER_PLOTS.R
@@ -529,12 +534,12 @@ def main():
     # 5. Sorting and Plotting
     overviewDF = overviewDF.dropna(how='all')
     #overviewDF = overviewDF.sort_values(by=(resType[0]), ascending=True)
-    # # undirected 
+    # undirected 
     overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']).iloc[::-1]
     # # directed, motifs
-    #overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
+    # overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
     # # memory, time
-    #overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA']).iloc[::-1]
+    # overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA']).iloc[::-1]
     
     print(overviewDF)
 
@@ -549,19 +554,19 @@ def main():
     pale_bi = sns.color_palette("coolwarm", 11)
     
     # ---Parameter values for CoPlot---
-    # Precision metrics
-    rand_values = [0, 0, 0]
-    shape_list = ['hm', 'hm', 'hm']
-    palettes_list = [pale3, pale3h, pale3r]
-    rotation_list = [0, 0, 0]
-    switch_list = [False, False, False]
+    # # Precision metrics
+    # rand_values = [0, 0, 0]
+    # shape_list = ['hm', 'hm', 'hm']
+    # palettes_list = [pale3, pale3h, pale3r]
+    # rotation_list = [0, 0, 0]
+    # switch_list = [False, False, False]
 
-    # # Fidelity
-    # rand_values = [0, 0]
-    # shape_list = ['hm', 'hm']
-    # palettes_list = [pale3, pale3h]
-    # rotation_list = [0, 0]
-    # switch_list = [False, False]
+    # Fidelity
+    rand_values = [0, 0]
+    shape_list = ['hm', 'hm']
+    palettes_list = [pale3, pale3h]
+    rotation_list = [0, 0]
+    switch_list = [False, False]
 
     # # memory and time for methods without borda
     # rand_values = [0, 0]
@@ -570,7 +575,7 @@ def main():
     # rotation_list = [45, 45]
     # switch_list = [True, True]
 
-    # motifs
+    # # motifs
     # rand_values = [1, 1, 1]
     # shape_list = ['arrow', 'arrow', 'arrow']
     # palettes_list = [pale1, pale1, pale1]

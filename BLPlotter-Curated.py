@@ -96,10 +96,14 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
      
     for i, dataset in enumerate(datasets):
         DF = DFs[i]
-        modifiedDF = pd.melt(DF, id_vars=['dataset'], 
-        # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
-        # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
-        value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'])
+        if "undirected" in resTypeFile:
+            # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
+            # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
+            value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
+        else:
+            value_vars=['GRNBOOST2', 'INFERELATOR']
+        
+        modifiedDF = pd.melt(DF, id_vars = ['dataset'], value_vars = value_vars)
         
         conditions = [
             #modifiedDF['dataset'].str.contains('-50'),
@@ -461,17 +465,32 @@ def main():
     # Generate AUPRC boxplot     
     if (opts.auprc):
         print('\n\nGenerating AUPRC boxplot...')
-        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'AUPRC', 'AUPRC')
+        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'AUPRC-undirected', 'AUPRC Undirected')
 
     # Generate AUROC boxplot
     if (opts.auroc):
         print('\n\nGenerating AUROC boxplot...')
-        boxplot(opts, evalConfigs, datasets, 0.5, 'AUROC', 'AUROC')
+        boxplot(opts, evalConfigs, datasets, 0.5, 'AUROC-undirected', 'AUROC Undirected')
         
     # Generate EPr boxplot
     if (opts.epr):
         print('\n\nGenerating Early Precision boxplot...')
-        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr', 'Early Precision')
+        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-undirected', 'Early Precision Undirected')
+
+    # Generate AUPRC boxplot     
+    if (opts.auprc):
+        print('\n\nGenerating AUPRC boxplot...')
+        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'AUPRC-directed', 'AUPRC Directed')
+
+    # Generate AUROC boxplot
+    if (opts.auroc):
+        print('\n\nGenerating AUROC boxplot...')
+        boxplot(opts, evalConfigs, datasets, 0.5, 'AUROC-directed', 'AUROC Directed')
+        
+    # Generate EPr boxplot
+    if (opts.epr):
+        print('\n\nGenerating Early Precision boxplot...')
+        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-directed', 'Early Precision Directed')
 
     # Generate overview plot     
     if (opts.overview):
@@ -479,12 +498,12 @@ def main():
 
         #---To add option to select overview columns---
         # # methods without borda
-        #resType = ['Memory','Times']
-        #resTypeFileName = ['Memory','Times']
+        resType = ['Memory','Times']
+        resTypeFileName = ['Memory','Times']
         
         # undirected metrics
-        resType = ['AUPRC Ratio', 'AUROC Ratio','Early Precision Ratio', 'Stability Across Datasets', 'Stability between runs']
-        resTypeFileName = ['AUPRC-undirected', 'AUROC-undirected', 'EPr-undirected', 'Jaccard', 'Spearman']
+        #resType = ['AUPRC Ratio', 'AUROC Ratio','Early Precision Ratio', 'Stability Across Datasets', 'Stability between runs']
+        #resTypeFileName = ['AUPRC-undirected', 'AUROC-undirected', 'EPr-undirected', 'Jaccard', 'Spearman']
         
         # # directed metrics
         #resType = ['AUPRC Ratio', 'AUROC Ratio','Early Precision Ratio']

@@ -308,6 +308,16 @@ if (soft_power == 0) {
   soft_power = as.numeric(select_soft_power(scale_free_topology))
   print("Soft power set to first maximum value:")
   print(soft_power)
+} else {
+  soft_power_value = scale_free_topology[as.character(soft_power)]
+  print(paste0("Soft power set to: ", soft_power, " with scale free topology value of: ", soft_power_value))
+  soft_power_computed = as.numeric(select_soft_power(scale_free_topology))
+  soft_power_computed_value = scale_free_topology[as.character(soft_power_computed)]
+  print(paste0("Soft power computed value: ", soft_power_computed, " with scale free topology value of: ", soft_power_computed_value))
+  if (soft_power_value!=soft_power_computed_value){
+    print("Warning: Computed soft power value differs from specified value. Computed soft value will be used for network construction")
+    soft_power = soft_power_computed
+  }
 }
 
 # Construct co-expression network. This function calls blockwiseConsensusModules, which uses the parameter minModuleSize for minimum module size for module detection. This value by default is 20, however given the small number of genes we have in total, it is required a smaller value.

@@ -44,6 +44,7 @@ def parse_arguments():
 def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
     plt.rcParams.update({'font.size': 14})
     DFs = []
+
     for i, dataset in enumerate(datasets):
         evalConfig = evalConfigs[i]
         DF = pd.read_csv(str(evalConfig.output_settings.base_dir) + '/' \
@@ -59,10 +60,16 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
      
     for i, dataset in enumerate(datasets):
         DF = DFs[i]
-        modifiedDF = pd.melt(DF, id_vars=['dataset'], 
-        value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'])
+
+        if "undirected" in resTypeFile:
+            # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
+            # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
+            value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
+        else:
+            value_vars=['GRNBOOST2', 'INFERELATOR']
         
-        # MODIFICACIÓN 1: Lógica de categorías para Boxplots (Consistente con los grupos solicitados)
+        modifiedDF = pd.melt(DF, id_vars = ['dataset'], value_vars = value_vars)
+        
         conditions = [
             modifiedDF['dataset'].str.contains('-200-'),
             modifiedDF['dataset'].str.contains('-1000-'),

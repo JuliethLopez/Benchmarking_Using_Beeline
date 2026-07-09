@@ -6,7 +6,7 @@ input_settings:
     input_dir: "inputs"
 
     # Subdirectory of inputs that datasets are placed in
-    dataset_dir: "experimental"
+    dataset_dir: "experimental/hHep"
 
     # Denotes a list of datasets, each with the following parameters:
     #   name: Name of the dataset. May be used in logging or other
@@ -24,7 +24,7 @@ input_settings:
     # "ExpressionData.csv", "PseudoTime.csv" and "refNetwork.csv", respectively.
     datasets:
           
-        - name: "hHep"
+        - name: "hHep_Chip_seq"
           exprData: "ExpressionData.csv"
           cellData: "PseudoTime.csv"
           trueEdges: "HepG2-ChIP-seq-network.csv"
@@ -104,4 +104,4 @@ output_settings:
 
     # Base output directory
     output_dir: "outputs"
-    output_prefix: "ESC"
+    output_prefix: "hHep"
