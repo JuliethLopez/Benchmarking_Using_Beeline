@@ -168,7 +168,7 @@ seurat_obj <- SetupForWGCNA(
 
 
 # metacells
-if(n_cells > 6000){
+if(n_cells > 5000){
   print("Creating metacells per cluster")
   seurat_obj <- MetacellsByGroups(
     seurat_obj = seurat_obj,

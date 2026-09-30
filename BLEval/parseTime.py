@@ -69,7 +69,7 @@ def getTime(evalObject, dataset):
             
             # path to pseduotime file (or 'cellData' file)
             PTFile = str(evalObject.input_settings.datadir.joinpath(dataset['name']+'/'+dataset['cellData']))
-         
+            print("Attempting to read file:", PTFile, flush=True)
             # Read in the PTFile to obtain the number of trajectories
             # Which is equal to the number of columns.           
 

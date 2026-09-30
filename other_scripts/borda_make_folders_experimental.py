@@ -12,7 +12,7 @@ for dataset in all_datasets:
     os.chdir(input_folder)
 
     # Read borda file
-    borda_df = pd.read_csv(f"{dataset}/Borda.csv")
+    borda_df = pd.read_csv(f"{dataset}/{dataset}_Chip_seq/Borda.csv")
     # Separate borda in different files
     borda_methods = ['BORDA','mBORDA','sBORDA','smBORDA']
     # Create folders and save the corresponding files

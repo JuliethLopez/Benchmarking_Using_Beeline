@@ -62,6 +62,10 @@ input_settings:
         - name: "GRNBOOST2"
           params: 
               should_run: [True]
+
+        - name: "GENIE3"
+          params: 
+              should_run: [True]
               
               
         - name: "PPCOR"
@@ -85,7 +89,7 @@ input_settings:
               random_seed_selection: [0] #The random number seed to use for selection
               
               
-        - name: "hdWGCNA" # if number of cells is higher than 20.000, metacells are computed 
+        - name: "hdWGCNA" # if number of cells is higher than 5000, metacells are computed 
           params:
               should_run: [True]
               run_tf: [False]
