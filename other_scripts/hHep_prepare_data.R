@@ -43,6 +43,10 @@ head(data_filtered)
 write.csv(data_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/ExpressionData.csv", 
           col.names=TRUE, row.names=TRUE, quote=FALSE)
 
+# read reference with HVGs
+data_filered = read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_Chip_seq/ExpressionData.csv", header=TRUE, row.names=1)
+gene_selected = rownames(data_filered)
+
 ### read old reference
 
 # reference 1
@@ -217,4 +221,18 @@ dim(reference_filtered) # 1612 3
 
 # save results
 write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_ns_Chip_seq/Non-specific-ChIP-seq-network.csv", row.names = FALSE, quote = FALSE)
+
+# reference 6
+reference = read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/julieth/STRING_regulatory_reference_2026.csv", header=TRUE)
+dim(reference) # 25527      3
+head(reference)
+
+#Remove repeated, auto loops
+reference <- reference %>% filter(Gene1 != Gene2)
+
+reference_filtered = reference[(reference$Gene1 %in% gene_selected) & (reference$Gene2 %in% gene_selected),]
+dim(reference_filtered) # 403 3
+
+# save results
+write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_STRING_2026/STRING_regulatory_reference_2026.csv", row.names = FALSE, quote = FALSE)
 

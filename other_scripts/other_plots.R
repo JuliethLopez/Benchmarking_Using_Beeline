@@ -7,9 +7,11 @@ library(dplyr)
 times <- list()
 datasets <- c("GSD", "HSC", "mCAD", "VSC")
 cell_number <- c(2000, 1000, 200)
+input_dir <- "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/Curated"
+output_dir <- "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated"
 
 for (name in 1:length(datasets)){
-  path <- paste0("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/Curated/", datasets[name], "/", datasets[name], "-Times.csv")
+  path <- paste0(input_dir, "/", datasets[name], "/", datasets[name], "-Times.csv")
   data <- read.csv(path)
   
   method_names <- data[,1] 
@@ -71,7 +73,7 @@ times_plot <- ggplot(plot_df, aes(x = CellNumber, y = Runtime, color = Method, g
     panel.spacing = unit(0.2, "lines") # Adjusts spacing between cell_number blocks
   )
 
-ggsave(times_plot, filename = "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated/Method_Runtimes.png", width = 12, height = 8)
+ggsave(times_plot, filename = paste0(output_dir, "/Method_Runtimes.png"), width = 12, height = 8)
 
 tab_dat <- plot_df %>%
   group_by(Dataset, Method) %>%
@@ -89,7 +91,7 @@ cell_number <- c(2000, 1000, 200)
 
 for (name in 1:length(datasets)){
     for (mtf in motifs){
-        path <- paste0("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/Curated/", datasets[name], "/", datasets[name], "-NetworkMotifs-", mtf,".csv")
+        path <- paste0(input_dir, "/", datasets[name], "/", datasets[name], "-NetworkMotifs-", mtf,".csv")
         data <- read.csv(path)
     
         method_names <- data[,1] 
@@ -130,7 +132,7 @@ plot_df$cell_number <- factor(plot_df$cell_number, levels = c("200", "1000", "20
 
 # categorical variables as factors for correct ordering
 #method_order <- c("hdWGCNA", "INFERELATOR", "GRNBOOST2", "BORDA", "mBORDA", "sBORDA", "smBORDA")
-method_order <- c("INFERELATOR", "GRNBOOST2")
+method_order <- c("INFERELATOR", "GRNBOOST2", "GENIE3")
 plot_df$Method <- factor(plot_df$Method, levels = method_order)
 
 # Heatmap of motifs scores
@@ -165,8 +167,7 @@ p <- ggplot(plot_df_non_borda, aes(x = cell_number, y = method_data, fill = Moti
     panel.spacing = unit(0.2, "lines") # Adjusts spacing between cell_number blocks
   )
 
-ggsave(p, filename = paste0("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated/Heatmap_Motifs.png"), width = 12, height = 8)
-
+ggsave(p, filename = paste0(output_dir, "/Heatmap_Motifs.png"), width = 12, height = 8)
 
 # ----------------------------memory plot--------------------------------
 # read csv of times
@@ -175,7 +176,7 @@ datasets <- c("GSD", "HSC", "mCAD", "VSC")
 cell_number <- c(2000, 1000, 200)
 
 for (name in 1:length(datasets)){
-  path <- paste0("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/Curated/", datasets[name], "/", datasets[name], "-Memory.csv")
+  path <- paste0(input_dir, "/", datasets[name], "/", datasets[name], "-Memory.csv")
   data <- read.csv(path)
   
   method_names <- data[,1] 
@@ -209,7 +210,7 @@ for (ds in names(memory)) {
 plot_df$CellNumber <- factor(plot_df$CellNumber, levels = c("200", "1000", "2000"))
 
 # categorical variables as factors for correct ordering
-method_order <- c("hdWGCNA", "INFERELATOR", "GRNBOOST2", "PIDC", "PPCOR")
+method_order <- c("hdWGCNA", "INFERELATOR", "GRNBOOST2", "GENIE3", "PIDC", "PPCOR")
 plot_df$Method <- factor(plot_df$Method, levels = method_order)
 
 # Heatmap of motifs scores
@@ -245,7 +246,7 @@ memory_plot <- ggplot(plot_df_non_borda, aes(x = CellNumber, y = Runtime_GB, col
     panel.spacing = unit(0.2, "lines") # Adjusts spacing between cell_number blocks
   )
 
-ggsave(memory_plot, filename = "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs_graphics/Curated/Method_Memory.png", width = 12, height = 8)
+ggsave(memory_plot, filename = paste0(output_dir, "/Method_Memory.png"), width = 12, height = 8)
 
 
 # table per dataset
@@ -255,10 +256,47 @@ tab_dat <- plot_df_non_borda %>%
   pivot_wider(names_from = Dataset, values_from = Avg_Memory_GB)
 tab_dat
 
+# experimental data pass to Gb ESC and hHEP
+memory_exp_ESC <- read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/experimental/ESC/ESC-Memory.csv")
+memory_exp_ESC$Runtime_GB <- round(memory_exp_ESC$ESC_Chip_seq/1048576, 2) # convert to GB
+
+memory_exp_hHEP <- read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/outputs/experimental/hHep/hHep-Memory.csv")
+memory_exp_hHEP$Runtime_GB <- round(memory_exp_hHEP$hHep_Chip_seq/1048576, 2) # convert to GB
+
+# ---------------------stability across datasets plot------------------------
+# methods didn't run well for mCAD, WGCNA was not finding a good solution, so mCAD was not included here
+datasets <- c("GSD", "HSC", "VSC")
+
+stability_list <- list()
+for (dataset in datasets){
+  path <- paste0(input_dir, "_repeted/", dataset, "/", dataset, "-Spearman.csv")
+  data <- read.csv(path)
+  stability_list[[dataset]] <- data
+}
+
+# transform to a dataframe
+plot_df <- data.frame()
+for (ds in names(stability_list)) {
+  temp <- data.frame(
+    Dataset = ds,
+    Method = stability_list[[ds]][,c("X")],
+    Stability = stability_list[[ds]][,c("Spearman.Median")])
+  plot_df <- rbind(plot_df, temp)
+}
+head(plot_df)
+
+#table per dataset and method
+tab_dat <- plot_df %>%
+  group_by(Dataset, Method) %>%
+  summarise(Stability = round(mean(Stability, na.rm = TRUE),2)) %>%
+  pivot_wider(names_from = Dataset, values_from = Stability)
+tab_dat
+
+# ---------------------just verification, not for publication------------------------
 
 # Check if all the possible edges exists in the infered networks, lets take GSD-2000-1 for example
 datasets <- c("GSD")
-methods <- c("GRNBOOST2", "hdWGCNA", "INFERELATOR", "PIDC", "PPCOR")
+methods <- c("GRNBOOST2", "hdWGCNA", "INFERELATOR", "GENIE3", "PIDC", "PPCOR")
 
 ref_network <- read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/Curated/GSD/GSD-200-1/refNetwork.csv")
 all_genes <- unique(c(ref_network$Gene1, ref_network$Gene2))

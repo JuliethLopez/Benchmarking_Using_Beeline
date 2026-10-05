@@ -298,3 +298,18 @@ dim(reference_filtered) # 4343 3
 
 # save results
 write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/ESC/ESC_ns_Chip_seq/Non-specific-ChIP-seq-network.csv", row.names = FALSE, quote = FALSE)
+
+
+# reference 6
+reference = read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/julieth/STRING_regulatory_reference_2026.csv", header=TRUE)
+dim(reference) # 25527      3
+head(reference)
+
+#Remove repeated, auto loops
+reference <- reference %>% filter(Gene1 != Gene2)
+
+reference_filtered = reference[(reference$Gene1 %in% gene_selected) & (reference$Gene2 %in% gene_selected),]
+dim(reference_filtered) # 721 3
+
+# save results
+write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/ESC/ESC_STRING_2026/STRING_regulatory_reference_2026.csv", row.names = FALSE, quote = FALSE)

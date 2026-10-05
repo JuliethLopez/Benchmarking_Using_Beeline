@@ -101,7 +101,7 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
             # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
             value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
         else:
-            value_vars=['GRNBOOST2', 'INFERELATOR']
+            value_vars=['GRNBOOST2', 'INFERELATOR', 'GENIE3']
         
         modifiedDF = pd.melt(DF, id_vars = ['dataset'], value_vars = value_vars)
         
@@ -571,7 +571,7 @@ def main():
         # overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA']).iloc[::-1]
         
         # # directed, motifs
-        overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
+        overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR', 'GENIE3']).iloc[::-1]
         
         print(overviewDF)
 

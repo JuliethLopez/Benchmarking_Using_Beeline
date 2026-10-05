@@ -53,6 +53,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-o', '--output', default='.',
       help="Output directory for generated plots.\n")
 
+    parser.add_argument('-d', '--directed', action="store_true", default=False,
+      help="Plot directed Early Precision. Uses only GRNBOOST2, INFERELATOR, and GENIE3.\n")
+
     return parser
 
 
@@ -466,6 +469,13 @@ def main():
     print("Datasets to be processed:")
     print(dataset_list)
 
+    def output_group_name(dataset_name):
+        """Map a sub-dataset name to its centralized output folder."""
+        dataset_name = dataset_name.strip("/")
+        if "/" in dataset_name:
+            return dataset_name.split("/", 1)[0]
+        return dataset_name.split("_", 1)[0]
+
     # 2. Calculate randPredictor baseline density
     randPredictor = {}
     print("\nCalculating network densities for random predictor baseline...")
@@ -489,10 +499,11 @@ def main():
 
     # 3. Setup Metrics for Heatmap
     resType = ['Early Precision Ratio']
-    resTypeFileName = ['EPr-undirected']
+    epr_suffix = 'EPr-directed' if opts.directed else 'EPr-undirected'
+    resTypeFileName = [epr_suffix]
     
     # Peak at the first folder to discover the algorithms list
-    first_ds_folder = dataset_list[0].split("/")[0]
+    first_ds_folder = output_group_name(dataset_list[0])
     sample_path = (
         f"{evalConfig.output_settings.base_dir}/experimental/{first_ds_folder}/"
         f"{first_ds_folder}-{resTypeFileName[0]}.csv"
@@ -519,12 +530,12 @@ def main():
         cached_dfs = {}
         
         for ds in dataset_list:
-            # Extract top-level folder (e.g., "ESC" from "ESC/ESC_chipunion", or "hHep_Chip_seq")
-            folder_name = ds.split("/")[0]
+            # Map "ESC/ESC_Chip_seq" or "ESC_Chip_seq" to the "ESC" group.
+            folder_name = output_group_name(ds)
             
-            # File pattern match: Beeline/outputs/experimental/ESC/ESC-EPr-undirected.csv
+            # Pattern: outputs/experimental/<group>/<group>-<metric>.csv
             file_path = f"{evalConfig.output_settings.base_dir}/experimental/{folder_name}/{folder_name}-{suffix}.csv"
-            
+
             if file_path not in cached_dfs:
                 if os.path.exists(file_path):
                     print(f"Loading shared file: {file_path}")
@@ -557,13 +568,15 @@ def main():
 
     # 5. Sorting and Reindexing Rows
     overviewDF = overviewDF.dropna(how='all')
-    
-    # Specific algorithm ordering matching your setup
-    target_order = [
-        'PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 
-        'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'
-    ]
-    # Filter target order to only include algorithms present in the dataframe
+
+    if opts.directed:
+        target_order = ['GRNBOOST2', 'INFERELATOR', 'GENIE3']
+    else:
+        target_order = [
+            'PIDC', 'GRNBOOST2', 'GENIE3', 'PPCOR', 'INFERELATOR', 'hdWGCNA',
+            'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'
+        ]
+        target_order += [a for a in overviewDF.index if a not in target_order]
     existing_order = [a for a in target_order if a in overviewDF.index]
     overviewDF = overviewDF.reindex(existing_order).iloc[::-1]
     
@@ -586,10 +599,10 @@ def main():
     pale3h = sns.cubehelix_palette(11, reverse=True)
     
     # CRITICAL: Truncate lists to match exactly len(resType) which is 1
-    rand_values = [0]
+    rand_values = [1]
     shape_list = ['hm']
     palettes_list = [pale3h]
-    rotation_list = [45] # 45 degrees handles long sub-dataset names beautifully
+    rotation_list = [25] # 45 degrees handles long sub-dataset names beautifully
     switch_list = [False]
 
     # Generate the heatmap using COplot

@@ -97,11 +97,12 @@ def signedEPrec(evalObject, algorithmName):
             predDF.drop_duplicates(keep = 'first', inplace=True)
             predDF.reset_index(drop = True,  inplace= True)
 
-            # Remove incorrect sign from consideration
-            for idx, row in predDF.iterrows():
-                if str(row['Gene1']) + '|' + str(row['Gene2']) not in TrueEdgeDict.keys():
-                    predDF.drop(idx, axis = 'index', inplace= True)
-            predDF.reset_index(drop = True,  inplace= True)
+            # Keep ranked edges that are still in TrueEdgeDict
+            # (reference-gene pairs of this sign, plus non-edges).
+            # Opposite-sign edges were already removed from the dict.
+            predDF['Edges'] = predDF['Gene1'].astype(str) + "|" + predDF['Gene2'].astype(str)
+            predDF = predDF[predDF['Edges'].isin(TrueEdgeDict)]
+            predDF.reset_index(drop=True, inplace=True)
             # check if ranked edges list is empty
             # if so, it is just set to an empty set
 

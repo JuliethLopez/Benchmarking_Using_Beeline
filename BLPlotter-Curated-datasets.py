@@ -67,104 +67,136 @@ def parse_arguments():
     return opts
 
 
-def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
-    
-    # Set plot variables
+def boxplot(opts, evalConfig, datasets, randValues, resTypeFile, resTypeName):
+    """Plot run-level metric distributions for every dataset in one config."""
     plt.rcParams.update({'font.size': 14})
-    
-    DFs = []
-    for i, dataset in enumerate(datasets):
-        evalConfig = evalConfigs[i]
-        
-        # Read output file containing evaluated values
-        DF = pd.read_csv(str(evalConfig.output_settings.base_dir) + '/' \
-                           + str(evalConfig.input_settings.datadir).split("inputs")[1] + '/' \
-                           + str(evalConfig.output_settings.output_prefix) \
-                           + '-' + resTypeFile + '.csv', header = 0, index_col = 0)
-        
-        DF = DF.T
 
-        #  Add row index as column
-        DF.index.name = 'dataset'
-        DF.reset_index(inplace = True)  
-        
-        DFs.append(DF)  
-
-    
-    # Initialize plot window
-    f, axes = plt.subplots(len(datasets), 1, figsize=(1.5*max([len(DF.columns) for DF in DFs]), 5*len(datasets)))
-     
-    for i, dataset in enumerate(datasets):
-        DF = DFs[i]
-                                     
-        if "undirected" in resTypeFile:
-            # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
-            # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
-            value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
-        else:
-            value_vars=['GRNBOOST2', 'INFERELATOR']
-        
-        modifiedDF = pd.melt(DF, id_vars = ['dataset'], value_vars = value_vars)
-        
-        conditions = [
-            modifiedDF['dataset'].str.contains('-200-'),
-            modifiedDF['dataset'].str.contains('-1000-')
-            #modifiedDF['dataset'].str.contains('-2000-')
+    if "undirected" in resTypeFile:
+        algorithm_order = [
+            'PIDC', 'GRNBOOST2', 'GENIE3', 'PPCOR', 'INFERELATOR',
+            'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'
         ]
-        outputs = ['200', '1000']
-        existing_cats = ['200', '1000', '2000']
-        modifiedDF['category'] = pd.Series(np.select(conditions, outputs, '2000')) #'0'
-        modifiedDF['category'] = modifiedDF['category'].astype('category').cat.set_categories(existing_cats, ordered=True)
-        modifiedDF['category'] = modifiedDF['category'].astype('category').cat.reorder_categories(['200', '1000', '2000'])
-              
-        if len(datasets) > 1:
-            subax = axes[i]
-        else:
-            subax= axes
-        
-        # Indicate random predictors value
-        ax = sns.lineplot(y = randValue, 
-                          x = range(-1,len(DF.columns)+1), ax = subax)
-        ax.lines[0].set_linestyle("--")
-        ax.lines[0].set_color("gray")
-        
-        # Plot the evaluated values as a box plot
-        ax = sns.boxplot(y = 'value', x = 'variable', data = modifiedDF, fliersize = 0,
-                        hue = "category",
-                        palette = sns.color_palette("Set1"),
-                        ax = subax)
-        # Rotate x-axis labels
-        subax.set_xticklabels(
-            subax.get_xticklabels(),
-            rotation=45,
-            ha='right'  # aligns labels with ticks more accurately
-        )
-        # Get the legend from just the box plot
-        handles, labels = ax.get_legend_handles_labels()
-        sns.swarmplot(y ='value', x = 'variable', data = modifiedDF,
-                        hue = "category",
-                        alpha = 0.5, palette = ['k'],
-                        dodge = True,
-                        ax = subax)
-        # Remove the old legend
-        ax.legend_.remove()
-        # Add just the handles/labels from the box plot back
-        ax.legend(handles, labels,
-                  title = 'Number of cells', bbox_to_anchor=(.5, 1), loc = 'upper center', ncol = len(modifiedDF['category'].cat.categories))
-      
-        ax.set_ylim([0.0,1])
-        ax.set_ylabel(resTypeName, fontsize = 18)
-        ax.set_title(resTypeName +' values for ' + dataset +' Network', fontsize = 18)
-        plt.tight_layout()
-    
-    subax.set_xlabel('Algorithm', fontsize = 18)
+    else:
+        algorithm_order = ['GRNBOOST2', 'INFERELATOR', 'GENIE3']
 
-               
-    file = opts.output + '/' \
-            + '-'.join([str(c.output_settings.output_prefix) for c in evalConfigs]) \
-            + '-boxplot-' + resTypeFile + '.pdf'
+    plot_data = []
+    for dataset in datasets:
+        file_path = (
+            f"{evalConfig.output_settings.base_dir}/Curated/{dataset}/"
+            f"{dataset}-{resTypeFile}.csv"
+        )
+        if not os.path.exists(file_path):
+            print(f"Warning: File not found {file_path}")
+            continue
+
+        result_df = pd.read_csv(file_path, header=0, index_col=0).T
+        result_df.index.name = 'dataset'
+        result_df.reset_index(inplace=True)
+
+        value_vars = [algorithm for algorithm in algorithm_order
+                      if algorithm in result_df.columns]
+        if not value_vars:
+            print(f"Warning: No expected algorithms found in {file_path}")
+            continue
+
+        modified_df = pd.melt(
+            result_df,
+            id_vars=['dataset'],
+            value_vars=value_vars,
+        )
+        conditions = [
+            modified_df['dataset'].str.contains('-200-', regex=False),
+            modified_df['dataset'].str.contains('-1000-', regex=False),
+        ]
+        categories = ['200', '1000', '2000']
+        modified_df['category'] = pd.Categorical(
+            np.select(conditions, ['200', '1000'], default='2000'),
+            categories=categories,
+            ordered=True,
+        )
+
+        rand_value = (randValues[dataset]
+                      if isinstance(randValues, dict) else randValues)
+        plot_data.append((dataset, modified_df, value_vars, rand_value))
+
+    if not plot_data:
+        print(f"Warning: No data available for {resTypeName} boxplot")
+        return
+
+    figure_width = 1.5 * max(len(value_vars)
+                             for _, _, value_vars, _ in plot_data)
+    fig, axes = plt.subplots(
+        len(plot_data),
+        1,
+        figsize=(figure_width, 5 * len(plot_data)),
+        squeeze=False,
+    )
+    axes = axes.ravel()
+    category_colors = dict(
+        zip(['200', '1000', '2000'], sns.color_palette("Set1", 3))
+    )
+    swarm_colors = {category: 'black'
+                    for category in ['200', '1000', '2000']}
+
+    for subax, (dataset, modified_df, value_vars, rand_value) in zip(
+            axes, plot_data):
+        subax.axhline(rand_value, linestyle='--', color='gray')
+
+        ax = sns.boxplot(
+            y='value',
+            x='variable',
+            data=modified_df,
+            order=value_vars,
+            hue='category',
+            hue_order=['200', '1000', '2000'],
+            fliersize=0,
+            palette=category_colors,
+            ax=subax,
+        )
+        handles, labels = ax.get_legend_handles_labels()
+        sns.swarmplot(
+            y='value',
+            x='variable',
+            data=modified_df,
+            order=value_vars,
+            hue='category',
+            hue_order=['200', '1000', '2000'],
+            alpha=0.5,
+            palette=swarm_colors,
+            dodge=True,
+            ax=subax,
+        )
+        if ax.legend_ is not None:
+            ax.legend_.remove()
+        ax.legend(
+            handles,
+            labels,
+            title='Number of cells',
+            bbox_to_anchor=(.5, 1),
+            loc='upper center',
+            ncol=max(1, len(labels)),
+        )
+        subax.tick_params(axis='x', labelrotation=45)
+        for label in subax.get_xticklabels():
+            label.set_ha('right')
+
+        ax.set_ylim([0.0, 1])
+        ax.set_ylabel(resTypeName, fontsize=18)
+        ax.set_title(
+            f"{resTypeName} values for {dataset} Network",
+            fontsize=18,
+        )
+
+    axes[-1].set_xlabel('Algorithm', fontsize=18)
+    fig.tight_layout()
+
+    collection_name = os.path.basename(
+        str(evalConfig.input_settings.datadir).rstrip('/')
+    )
+    file = f"{opts.output}/{collection_name}-boxplot-{resTypeFile}.pdf"
     print("Boxplot saved to " + file)
-    plt.savefig(file, dpi = 300)
+    fig.savefig(file, dpi=300)
+    plt.close(fig)
 
 def COplot(inputDF, width = 12, height = 7, randValues = [], shape = [], 
             palettes = [], levels = [], rotation = [], switch = [], metric_type = 'score'):   #    metric_type = 'ratio' or 'score'
@@ -317,8 +349,21 @@ def COplot(inputDF, width = 12, height = 7, randValues = [], shape = [],
                             rangesD = (round(inputDF[levls[levlIdx]][colNames[colIdx]].min(),3), 
                                       round(inputDF[levls[levlIdx]][colNames[colIdx]].max(),3))
 
-                            value = (value-rangesD[0])/(rangesD[1]-rangesD[0])
-                            col = palettes[levlIdx][int(np.floor((value)*10))]
+                            if rangesD[0] == rangesD[1]:
+                                # A constant column has no range to normalize.
+                                # Keep valid all-zero scores at the lowest palette color.
+                                value = 0.0
+                            else:
+                                value = (value-rangesD[0])/(rangesD[1]-rangesD[0])
+                                value = np.clip(value, 0.0, 1.0)
+
+                            palette_idx = int(np.floor(
+                                value * (len(palettes[levlIdx]) - 1)
+                            ))
+                            palette_idx = np.clip(
+                                palette_idx, 0, len(palettes[levlIdx]) - 1
+                            )
+                            col = palettes[levlIdx][palette_idx]
 
 
                         if shape[levlIdx] == 'c':
@@ -479,130 +524,216 @@ def main():
         randPredictor[ds_name] = trueEdgesDF.shape[0] / numPossibleEdges
         print(f"Random Predictor for {ds_name}: {randPredictor[ds_name]:.4f}")
 
-    # 3. Setup Metrics for Heatmap
-    # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
-    # resTypeFileName = ['AUPRC-undirected', 'Jaccard', 'EPr-undirected']
-    resType = ['Stability Across Datasets','Stability Across Runs'] 
-    resTypeFileName = ['Jaccard', 'Spearman']
-    # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
-    # resTypeFileName = ['AUPRC-directed', 'Jaccard', 'EPr-directed']
-    # resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI'] #MEJOR USAR OTHER_PLOTS.R o CUrated-sin grupos
-    # resTypeFileName = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
-    # resType = ['Memory', 'Time'] #MEJOR USAR OTHER_PLOTS.R
-    # resTypeFileName = ['Memory', 'Times']
-    
-    # Peek at first dataset to initialize algorithm list
-    first_ds = dataset_list[0]
-    sample_path = (
-        f"{evalConfig.output_settings.base_dir}/Curated/{first_ds}/"
-        f"{first_ds}-{resTypeFileName[0]}.csv"
-    )
-    sample_df = pd.read_csv(sample_path, index_col=0)
-    algs = sample_df.index
+    # Generate AUPRC boxplot     
+    if (opts.auprc):
+        print('\n\nGenerating undirected AUPRC boxplot...')
+        boxplot(
+            opts, evalConfig, dataset_list, randPredictor,
+            'AUPRC-undirected', 'AUPRC Undirected'
+        )
 
-    # Initialize MultiIndex DataFrame
-    multIndTuple = [(res, ds) for res in resType for ds in dataset_list]
-    overviewDF = pd.DataFrame(index=algs, columns=pd.MultiIndex.from_tuples(multIndTuple))
-
-    # 4. Aggregate Data with EXACT guidance calculation logic
-    print("Reading result files and computing overview values...")
-    for i, res_label in enumerate(resType):
-        suffix = resTypeFileName[i]
+    # Generate AUROC boxplot
+    if (opts.auroc):
+        print('\n\nGenerating undirected AUROC boxplot...')
+        boxplot(
+            opts, evalConfig, dataset_list, 0.5,
+            'AUROC-undirected', 'AUROC Undirected'
+        )
         
-        for ds in dataset_list:
-            # CHANGE: Path logic follows the specific structure in your request
-            file_path = f"{evalConfig.output_settings.base_dir}/Curated/{ds}/{ds}-{suffix}.csv"
+    # Generate EPr boxplot
+    if (opts.epr):
+        print('\n\nGenerating undirected Early Precision boxplot...')
+        boxplot(
+            opts, evalConfig, dataset_list, randPredictor,
+            'EPr-undirected', 'Early Precision Undirected'
+        )
 
-            if os.path.exists(file_path):
-                ResDF = pd.read_csv(file_path, index_col=0).T # Transpose as per guidance
-                
-                for alg in algs:
-                    if alg in ResDF.columns:
-                        # CHANGE: Use guidance calculation logic for ratios vs medians
-                        if 'Ratio' in res_label:
-                            overviewDF.loc[alg, (res_label, ds)] = ResDF[alg].median() / randPredictor[ds]
-                        elif 'Stability' in res_label:
-                            # Guidance uses the first value for stability
-                            overviewDF.loc[alg, (res_label, ds)] = ResDF.iloc[0][alg]
-                        elif res_label == 'Memory':
-                            overviewDF.loc[alg, (res_label, ds)] = ResDF[alg].median() / 1048576 # Convert to GB
-                        else:
-                            overviewDF.loc[alg, (res_label, ds)] = ResDF[alg].median()
-            else:
-                print(f"Warning: File not found {file_path}")
+    # Generate AUPRC boxplot     
+    if (opts.auprc):
+        print('\n\nGenerating directed AUPRC boxplot...')
+        boxplot(
+            opts, evalConfig, dataset_list, randPredictor,
+            'AUPRC-directed', 'AUPRC Directed'
+        )
 
-    # 5. Sorting and Plotting
-    overviewDF = overviewDF.dropna(how='all')
-    #overviewDF = overviewDF.sort_values(by=(resType[0]), ascending=True)
-    # undirected 
-    overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']).iloc[::-1]
-    # # directed, motifs
-    # overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
-    # # memory, time
-    # overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA']).iloc[::-1]
+    # Generate AUROC boxplot
+    if (opts.auroc):
+        print('\n\nGenerating directed AUROC boxplot...')
+        boxplot(
+            opts, evalConfig, dataset_list, 0.5,
+            'AUROC-directed', 'AUROC Directed'
+        )
+        
+    # Generate EPr boxplot
+    if (opts.epr):
+        print('\n\nGenerating directed Early Precision boxplot...')
+        boxplot(
+            opts, evalConfig, dataset_list, randPredictor,
+            'EPr-directed', 'Early Precision Directed'
+        )
+
+    # Generate overview plot     
+    if (opts.overview):
+        print('\n\nGenerating overview plot...')
+
+        # 3. Setup Metrics for Heatmap
+        # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
+        # resTypeFileName = ['AUPRC-undirected', 'Jaccard', 'EPr-undirected']
+        resType = ['AUPRC Ratio D', 'Early Precision Ratio D']
+        resTypeFileName = ['AUPRC-directed', 'EPr-directed']
+        # resType = ['Early Precision Ratio I', 'Early Precision Ratio A']
+        # resTypeFileName = ['EPr-Inhibitory', 'EPr-Activation']
+        # resType = ['Stability Across Datasets','Stability Across Runs'] 
+        # resTypeFileName = ['Jaccard', 'Spearman']
+        # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
+        # resTypeFileName = ['AUPRC-directed', 'Jaccard', 'EPr-directed']
+        # resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI'] #MEJOR USAR OTHER_PLOTS.R o CUrated-sin grupos
+        # resTypeFileName = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
+        # resType = ['Memory', 'Time'] #MEJOR USAR OTHER_PLOTS.R
+        # resTypeFileName = ['Memory', 'Times']
+        
+        # Peek at first dataset to initialize algorithm list
+        first_ds = dataset_list[0]
+        sample_path = (
+            f"{evalConfig.output_settings.base_dir}/Curated/{first_ds}/"
+            f"{first_ds}-{resTypeFileName[0]}.csv"
+        )
+        sample_df = pd.read_csv(sample_path, index_col=0)
+        algs = sample_df.index
+
+        # Initialize MultiIndex DataFrame
+        multIndTuple = [(res, ds) for res in resType for ds in dataset_list]
+        overviewDF = pd.DataFrame(index=algs, columns=pd.MultiIndex.from_tuples(multIndTuple))
+
+        # 4. Aggregate Data with EXACT guidance calculation logic
+        print("Reading result files and computing overview values...")
+        for i, res_label in enumerate(resType):
+            suffix = resTypeFileName[i]
+            
+            for ds in dataset_list:
+                # CHANGE: Path logic follows the specific structure in your request
+                file_path = f"{evalConfig.output_settings.base_dir}/Curated/{ds}/{ds}-{suffix}.csv"
+
+                if os.path.exists(file_path):
+                    ResDF = pd.read_csv(file_path, index_col=0).T # Transpose as per guidance
+                    
+                    for alg in algs:
+                        if alg in ResDF.columns:
+                            # CHANGE: Use guidance calculation logic for ratios vs medians
+                            if 'Ratio' in res_label:
+                                overviewDF.loc[alg, (res_label, ds)] = ResDF[alg].median() / randPredictor[ds]
+                            elif 'Stability' in res_label:
+                                # Guidance uses the first value for stability
+                                overviewDF.loc[alg, (res_label, ds)] = ResDF.iloc[0][alg]
+                            elif res_label == 'Memory':
+                                overviewDF.loc[alg, (res_label, ds)] = ResDF[alg].median() / 1048576 # Convert to GB
+                            else:
+                                overviewDF.loc[alg, (res_label, ds)] = ResDF[alg].median()
+                else:
+                    print(f"Warning: File not found {file_path}")
+
+        # 5. Sorting and Plotting
+        overviewDF = overviewDF.dropna(how='all')
+        #overviewDF = overviewDF.sort_values(by=(resType[0]), ascending=True)
+
+        signed_directed_suffixes = {'EPr-Inhibitory', 'EPr-Activation'}
+        has_directed_metrics = any(
+            suffix.endswith('-directed')
+            or suffix in signed_directed_suffixes
+            for suffix in resTypeFileName
+        )
+
+        if has_directed_metrics:
+            algorithm_order = ['GRNBOOST2', 'INFERELATOR', 'GENIE3']
+        else:
+            algorithm_order = [
+                'PIDC', 'GRNBOOST2', 'GENIE3', 'PPCOR', 'INFERELATOR',
+                'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'
+            ]
+
+        existing_algorithms = [
+            algorithm for algorithm in algorithm_order
+            if algorithm in overviewDF.index
+        ]
+        overviewDF = overviewDF.reindex(existing_algorithms).iloc[::-1]
+        
+        print(overviewDF)
+
+        pale1 = sns.cubehelix_palette(11, dark=1, light = 0)
+        pale2 = sns.color_palette("plasma_r",11) #color invertido
+        pale3 = sns.color_palette("viridis",11)
+        pale3h = sns.cubehelix_palette(11, reverse = True)#[2:]
+        pale3r = sns.color_palette("magma",11)
+        pale4 = sns.color_palette("magma_r",13)[:-2] #color invertido
+        pale5 = sns.cubehelix_palette(rot=-0.3,n_colors = 11) #color invertido
+        pale5r = sns.color_palette('cividis_r', n_colors = 12)[:-1] #color invertido
+        pale_bi = sns.color_palette("coolwarm", 11)
+        
+        #---Parameter values for CoPlot---
+        # Precision metrics
+        # AUPRC and EPr are first divided by network density, so we need to plot 1 as the random value for AUPRC and EPr
+        # rand_values = [1, 0, 1]
+        # shape_list = ['hm', 'hm', 'hm']
+        # palettes_list = [pale3, pale3h, pale3r]
+        # rotation_list = [0, 0, 0]
+        # switch_list = [False, False, False]
+
+        # only AUPRC and EPR directed
+        rand_values = [1, 1]
+        shape_list = ['hm', 'hm']
+        palettes_list = [pale3, pale3h]
+        rotation_list = [0, 0]
+        switch_list = [False, False]
+        
+        # # EPr inhibitory and activation
+        # rand_values = [1, 1]
+        # shape_list = ['hm', 'hm']
+        # palettes_list = [pale3r, pale3r]
+        # rotation_list = [0, 0]
+        # switch_list = [False, False]
+
+        # # Fidelity
+        # rand_values = [0, 0]
+        # shape_list = ['hm', 'hm']
+        # palettes_list = [pale3, pale3h]
+        # rotation_list = [0, 0]
+        # switch_list = [False, False]
+
+        # # memory and time for methods without borda
+        # rand_values = [0, 0]
+        # shape_list = ['hm', 'hm']
+        # palettes_list = [pale5r, pale5]
+        # rotation_list = [45, 45]
+        # switch_list = [True, True]
+
+        # # motifs
+        # rand_values = [1, 1, 1]
+        # shape_list = ['arrow', 'arrow', 'arrow']
+        # palettes_list = [pale1, pale1, pale1]
+        # rotation_list = [45, 45, 45]
+        # switch_list = [False, False, False]
+
+        fig = COplot(
+            overviewDF.astype(float), 
+            width=2 * len(dataset_list) * len(resType), 
+            height=len(algs) + 5, 
+            randValues=rand_values,
+            shape=shape_list, 
+            palettes=palettes_list,
+            levels=resType,  
+            rotation=rotation_list,
+            switch=switch_list,
+        )
+
+        # Save output
+        output_pdf = f"{opts.output}/Heatmap_{'_'.join(resTypeFileName)}.pdf"
+        fig.savefig(output_pdf, bbox_inches='tight')
+        print(f"Heatmap saved to {output_pdf}")
+
+        fig.savefig(
+        f"{opts.output}/Heatmap_{'_'.join(resTypeFileName)}.png",
+        dpi=300,
+        bbox_inches="tight")
     
-    print(overviewDF)
-
-    pale1 = sns.cubehelix_palette(11, dark=1, light = 0)
-    pale2 = sns.color_palette("plasma_r",11) #color invertido
-    pale3 = sns.color_palette("viridis",11)
-    pale3h = sns.cubehelix_palette(11, reverse = True)#[2:]
-    pale3r = sns.color_palette("magma",11)
-    pale4 = sns.color_palette("magma_r",13)[:-2] #color invertido
-    pale5 = sns.cubehelix_palette(rot=-0.3,n_colors = 11) #color invertido
-    pale5r = sns.color_palette('cividis_r', n_colors = 12)[:-1] #color invertido
-    pale_bi = sns.color_palette("coolwarm", 11)
-    
-    # ---Parameter values for CoPlot---
-    # # Precision metrics
-    # rand_values = [0, 0, 0]
-    # shape_list = ['hm', 'hm', 'hm']
-    # palettes_list = [pale3, pale3h, pale3r]
-    # rotation_list = [0, 0, 0]
-    # switch_list = [False, False, False]
-
-    # Fidelity
-    rand_values = [0, 0]
-    shape_list = ['hm', 'hm']
-    palettes_list = [pale3, pale3h]
-    rotation_list = [0, 0]
-    switch_list = [False, False]
-
-    # # memory and time for methods without borda
-    # rand_values = [0, 0]
-    # shape_list = ['hm', 'hm']
-    # palettes_list = [pale5r, pale5]
-    # rotation_list = [45, 45]
-    # switch_list = [True, True]
-
-    # # motifs
-    # rand_values = [1, 1, 1]
-    # shape_list = ['arrow', 'arrow', 'arrow']
-    # palettes_list = [pale1, pale1, pale1]
-    # rotation_list = [45, 45, 45]
-    # switch_list = [False, False, False]
-
-    fig = COplot(
-        overviewDF.astype(float), 
-        width=2 * len(dataset_list) * len(resType), 
-        height=len(algs) + 5, 
-        randValues=rand_values,
-        shape=shape_list, 
-        palettes=palettes_list,
-        levels=resType,  
-        rotation=rotation_list,
-        switch=switch_list,
-    )
-
-    # Save output
-    output_pdf = f"{opts.output}/Heatmap_{'_'.join(resTypeFileName)}.pdf"
-    fig.savefig(output_pdf, bbox_inches='tight')
-    print(f"Heatmap saved to {output_pdf}")
-
-    fig.savefig(
-    f"{opts.output}/Heatmap_{'_'.join(resTypeFileName)}.png",
-    dpi=300,
-    bbox_inches="tight")
-
 if __name__ == '__main__':
   main()
