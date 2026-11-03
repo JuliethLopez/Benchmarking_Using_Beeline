@@ -47,6 +47,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-e', '--epr', action="store_true", default=False,
         help="Generate box plot of early precision values for evaluated algorithms.\n")
 
+    parser.add_argument('-s', '--signed', action="store_true", default=False,
+        help="Generate box plots of signed early precision (activation and inhibitory).\n")
+
     parser.add_argument('-v', '--overview', action="store_true", default=False,
       help="Generate plot of AUPRC and early precision ratios relative to a random predictor.\n")
     
@@ -71,13 +74,15 @@ def boxplot(opts, evalConfig, datasets, randValues, resTypeFile, resTypeName):
     """Plot run-level metric distributions for every dataset in one config."""
     plt.rcParams.update({'font.size': 14})
 
-    if "undirected" in resTypeFile:
+    if resTypeFile in ('EPr-Activation', 'EPr-Inhibitory'):
+        algorithm_order = ['PPCOR', 'INFERELATOR', 'hdWGCNA']
+    elif "undirected" in resTypeFile:
         algorithm_order = [
             'PIDC', 'GRNBOOST2', 'GENIE3', 'PPCOR', 'INFERELATOR',
             'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA'
         ]
     else:
-        algorithm_order = ['GRNBOOST2', 'INFERELATOR', 'GENIE3']
+        algorithm_order = ['GRNBOOST2', 'GENIE3', 'INFERELATOR']
 
     plot_data = []
     for dataset in datasets:
@@ -572,6 +577,17 @@ def main():
             'EPr-directed', 'Early Precision Directed'
         )
 
+    if (opts.signed):
+        print('\n\nGenerating signed Early Precision boxplot...')
+        boxplot(
+            opts, evalConfig, dataset_list, randPredictor,
+            'EPr-Activation', 'Early Precision Activation'
+        )
+        boxplot(
+            opts, evalConfig, dataset_list, randPredictor,
+            'EPr-Inhibitory', 'Early Precision Inhibitory'
+        )
+
     # Generate overview plot     
     if (opts.overview):
         print('\n\nGenerating overview plot...')
@@ -579,14 +595,18 @@ def main():
         # 3. Setup Metrics for Heatmap
         # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
         # resTypeFileName = ['AUPRC-undirected', 'Jaccard', 'EPr-undirected']
-        resType = ['AUPRC Ratio D', 'Early Precision Ratio D']
-        resTypeFileName = ['AUPRC-directed', 'EPr-directed']
+        # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
+        # resTypeFileName = ['AUPRC-directed', 'Jaccard', 'EPr-directed']
+        if opts.signed:
+            resType = ['Early Precision Ratio I', 'Early Precision Ratio A']
+            resTypeFileName = ['EPr-Inhibitory', 'EPr-Activation']
+        else:
+            resType = ['AUPRC Ratio D', 'Early Precision Ratio D']
+            resTypeFileName = ['AUPRC-directed', 'EPr-directed']
         # resType = ['Early Precision Ratio I', 'Early Precision Ratio A']
         # resTypeFileName = ['EPr-Inhibitory', 'EPr-Activation']
         # resType = ['Stability Across Datasets','Stability Across Runs'] 
         # resTypeFileName = ['Jaccard', 'Spearman']
-        # resType = ['AUPRC Ratio', 'Stability Across Datasets', 'Early Precision Ratio']
-        # resTypeFileName = ['AUPRC-directed', 'Jaccard', 'EPr-directed']
         # resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI'] #MEJOR USAR OTHER_PLOTS.R o CUrated-sin grupos
         # resTypeFileName = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
         # resType = ['Memory', 'Time'] #MEJOR USAR OTHER_PLOTS.R
@@ -636,15 +656,14 @@ def main():
         overviewDF = overviewDF.dropna(how='all')
         #overviewDF = overviewDF.sort_values(by=(resType[0]), ascending=True)
 
-        signed_directed_suffixes = {'EPr-Inhibitory', 'EPr-Activation'}
-        has_directed_metrics = any(
-            suffix.endswith('-directed')
-            or suffix in signed_directed_suffixes
-            for suffix in resTypeFileName
-        )
+        signed_suffixes = {'EPr-Inhibitory', 'EPr-Activation'}
+        has_signed_metrics = any(suffix in signed_suffixes for suffix in resTypeFileName)
+        has_directed_metrics = any(suffix.endswith('-directed') for suffix in resTypeFileName)
 
-        if has_directed_metrics:
-            algorithm_order = ['GRNBOOST2', 'INFERELATOR', 'GENIE3']
+        if has_signed_metrics:
+            algorithm_order = ['PPCOR', 'hdWGCNA', 'INFERELATOR']
+        elif has_directed_metrics:
+            algorithm_order = ['GRNBOOST2', 'GENIE3', 'INFERELATOR']
         else:
             algorithm_order = [
                 'PIDC', 'GRNBOOST2', 'GENIE3', 'PPCOR', 'INFERELATOR',
@@ -672,18 +691,18 @@ def main():
         #---Parameter values for CoPlot---
         # Precision metrics
         # AUPRC and EPr are first divided by network density, so we need to plot 1 as the random value for AUPRC and EPr
-        # rand_values = [1, 0, 1]
-        # shape_list = ['hm', 'hm', 'hm']
-        # palettes_list = [pale3, pale3h, pale3r]
-        # rotation_list = [0, 0, 0]
-        # switch_list = [False, False, False]
+        rand_values = [1, 0, 1]
+        shape_list = ['hm', 'hm', 'hm']
+        palettes_list = [pale3, pale3h, pale3r]
+        rotation_list = [0, 0, 0]
+        switch_list = [False, False, False]
 
-        # only AUPRC and EPR directed
-        rand_values = [1, 1]
-        shape_list = ['hm', 'hm']
-        palettes_list = [pale3, pale3h]
-        rotation_list = [0, 0]
-        switch_list = [False, False]
+        # # only AUPRC and EPR directed
+        # rand_values = [1, 1]
+        # shape_list = ['hm', 'hm']
+        # palettes_list = [pale3, pale3h]
+        # rotation_list = [0, 0]
+        # switch_list = [False, False]
         
         # # EPr inhibitory and activation
         # rand_values = [1, 1]

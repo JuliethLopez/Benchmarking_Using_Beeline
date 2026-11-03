@@ -255,26 +255,46 @@ if(n_cells > 5000){
   )
 }
 
-# Test different soft powers:
-seurat_obj <- TestSoftPowers(
-  seurat_obj,
-  networkType = networkType # it is possible to use "signed", "unsigned" or "signed hybrid"
-)
+skip_replicate <- function(reason) {
+  message(reason)
+  message("Skipping this replicate without failing the job (non-convergence / too few nodes).")
+  writeLines(reason, file.path(dirname(outFile), "SKIPPED.txt"))
+  quit(save = "no", status = 0)
+}
 
-# plot the results:
-plot_list <- PlotSoftPowers(seurat_obj)
+# Test different soft powers. pickSoftThreshold/scaleFreeFitIndex can fail
+# with NA/NaN/Inf when the network is too small or connectivity is degenerate.
+default_soft_power <- if (identical(networkType, "unsigned")) 6 else 12
+sft_converged <- FALSE
+scale_free_topology <- numeric(0)
 
-# assemble with patchwork
-png(file.path(outdir, "SoftPower.png"))
-wrap_plots(plot_list, ncol=2)
-dev.off()
+sft_result <- tryCatch({
+  seurat_obj_sft <- TestSoftPowers(
+    seurat_obj,
+    networkType = networkType # it is possible to use "signed", "unsigned" or "signed hybrid"
+  )
+  plot_list <- PlotSoftPowers(seurat_obj_sft)
+  png(file.path(outdir, "SoftPower.png"))
+  wrap_plots(plot_list, ncol=2)
+  dev.off()
+  power_table <- GetPowerTable(seurat_obj_sft)
+  write_csv2(power_table, file = file.path(outdir,"power_table.csv"))
+  list(seurat_obj = seurat_obj_sft, power_table = power_table)
+}, error = function(e) {
+  message("TestSoftPowers did not converge (often NA/NaN/Inf in scale-free fit on small networks).")
+  message(conditionMessage(e))
+  NULL
+})
 
-power_table <- GetPowerTable(seurat_obj)
-write_csv2(power_table, file = file.path(outdir,"power_table.csv"))
-
-# select first high soft power value
-scale_free_topology = power_table$SFT.R.sq
-names(scale_free_topology) = power_table$Power
+if (!is.null(sft_result)) {
+  seurat_obj <- sft_result$seurat_obj
+  power_table <- sft_result$power_table
+  if ("SFT.R.sq" %in% names(power_table) && any(is.finite(power_table$SFT.R.sq))) {
+    sft_converged <- TRUE
+    scale_free_topology <- power_table$SFT.R.sq
+    names(scale_free_topology) <- power_table$Power
+  }
+}
 
 select_soft_power <- function(lista) {
   # if there is only one value
@@ -302,7 +322,15 @@ select_soft_power <- function(lista) {
   }  
 }
 
-if (soft_power == 0) {
+if (!sft_converged) {
+  message(paste0(
+    "Scale-free topology could not be estimated. Using default soft_power=",
+    default_soft_power, "."
+  ))
+  if (soft_power == 0) {
+    soft_power <- default_soft_power
+  }
+} else if (soft_power == 0) {
   print("Soft_power is cero... Calculating soft power...")
   
   soft_power = as.numeric(select_soft_power(scale_free_topology))
@@ -328,49 +356,107 @@ if (length(variable_features) < nVariableFeatures){
 } else {min_module_size = 20}
 print(min_module_size)
 
-# Try different soft_power
-soft_power_try <- soft_power
-success <- FALSE
+# ConstructNetwork's module detection is not reliable for very small networks.
+# For those networks, calculate the adjacency and TOM matrices directly.
+small_network <- length(variable_features) <= 5
+small_network_TOM <- NULL
 
-while (soft_power_try >= 1 && !success) {
-
-  message(paste("Trying soft power:", soft_power_try))
-
-  tryCatch({
-
-    seurat_obj <- ConstructNetwork(
-      seurat_obj,
-      soft_power = soft_power_try,
-      tom_name = 'metacells', # name of the topoligical overlap matrix written to disk
-      overwrite_tom = TRUE,
-      tom_outdir = outdir_TOM,
-      minModuleSize = min_module_size
+if (small_network) {
+  message(
+    paste(
+      "Small network detected with", length(variable_features),
+      "genes. Calculating TOM directly."
     )
+  )
 
-    success <- TRUE
-    message(paste("Success with soft power:", soft_power_try))
+  datExpr <- tryCatch(
+    as.matrix(GetDatExpr(seurat_obj)),
+    error = function(e) {
+      as.matrix(seurat_obj@misc[[seurat_obj@misc$active_wgcna]]$datExpr)
+    }
+  )
 
+  adjacency_matrix <- tryCatch({
+    WGCNA::adjacency(
+      datExpr,
+      power = soft_power,
+      type = networkType,
+      corFnc = "cor",
+      corOptions = list(use = "pairwise.complete.obs")
+    )
   }, error = function(e) {
-
-    message(paste("Failed with soft power:", soft_power_try))
-    message("Error:", e$message)
-
-    soft_power_try <- soft_power_try - 1
+    skip_replicate(paste("Adjacency failed after scale-free non-convergence:", conditionMessage(e)))
   })
+
+  tom_type <- if (networkType == "signed hybrid") "signed" else networkType
+  small_network_TOM <- tryCatch({
+    WGCNA::TOMsimilarity(
+      adjacency_matrix,
+      TOMType = tom_type
+    )
+  }, error = function(e) {
+    skip_replicate(paste("TOM calculation failed after scale-free non-convergence:", conditionMessage(e)))
+  })
+  diag(small_network_TOM) <- 0
+  rownames(small_network_TOM) <- colnames(datExpr)
+  colnames(small_network_TOM) <- colnames(datExpr)
+
+  soft_power_try <- soft_power
+  modules <- data.frame(
+    gene_name = colnames(datExpr),
+    module = "small_network"
+  )
+  write_csv2(modules, file = file.path(outdir, "modules.csv"))
+  nongrey_genes <- modules$gene_name
+} else {
+  # Try different soft_power
+  soft_power_try <- soft_power
+  success <- FALSE
+
+  while (soft_power_try >= 1 && !success) {
+
+    message(paste("Trying soft power:", soft_power_try))
+
+    net_obj <- tryCatch({
+      ConstructNetwork(
+        seurat_obj,
+        soft_power = soft_power_try,
+        tom_name = 'metacells', # name of the topoligical overlap matrix written to disk
+        overwrite_tom = TRUE,
+        tom_outdir = outdir_TOM,
+        minModuleSize = min_module_size
+      )
+    }, error = function(e) {
+      message(paste("Failed with soft power:", soft_power_try))
+      message("Error:", e$message)
+      NULL
+    })
+
+    if (!is.null(net_obj)) {
+      seurat_obj <- net_obj
+      success <- TRUE
+      message(paste("Success with soft power:", soft_power_try))
+    } else {
+      soft_power_try <- soft_power_try - 1
+    }
+  }
+
+  if (!success) {
+    skip_replicate("ConstructNetwork failed for all soft-power values (no scale-free convergence / too few nodes).")
+  }
+
+  # Plot dendrogram
+  png(file.path(outdir, "Dendogram_tom_metacells.png"))
+  PlotDendrogram(seurat_obj, main='hdWGCNA Dendrogram')
+  dev.off()
+
+  # save modules
+  modules <- GetModules(seurat_obj)
+  write_csv2(modules, file = file.path(outdir,"modules.csv"))
+
+  # grey modules contain genes that did not clustered properly to other modules, so can be ignored
+  nongrey_genes <- subset(modules, module != 'grey') %>% .$gene_name
 }
-
-
-# PLot dendrogram
-png(file.path(outdir, "Dendogram_tom_metacells.png"))
-PlotDendrogram(seurat_obj, main='hdWGCNA Dendrogram')
-dev.off()
-
-# save modules
-modules <- GetModules(seurat_obj)
-write_csv2(modules, file = file.path(outdir,"modules.csv"))
-
-# grey modules contain genes that did not clustered properly to other modules, so can be ignored
-nongrey_genes <- subset(modules, module != 'grey') %>% .$gene_name
 
 # ---------- Transcription factor regulatory network analysis WGCNA-----------
 
@@ -445,44 +531,49 @@ if(run_tf==TRUE){
   gene_name <- modules$gene_name
   #nongrey_genes <- modules[modules$module!="grey","gene_name"]
 
-  # load TOM matrix
-  tom_path <- file.path(outdir_TOM, "metacells_TOM.rda")
-  #tom_path2 <- file.path(outdir_TOM, "metacells_block.1.rda")
+  if (small_network) {
+    print("Using directly calculated TOM matrix for small network")
+    TOM <- small_network_TOM
+  } else {
+    # load TOM matrix
+    tom_path <- file.path(outdir_TOM, "metacells_TOM.rda")
+    #tom_path2 <- file.path(outdir_TOM, "metacells_block.1.rda")
 
-  # repeat {
-  #   if (file.exists(tom_path1)) {
-  #     tom_path <- tom_path1
-  #     break
-  #   } else {
-  #     if (file.exists(tom_path2)) {
-  #       tom_path <- tom_path2
-  #       break
-  #     }
-  #   }
-  # }
+    # repeat {
+    #   if (file.exists(tom_path1)) {
+    #     tom_path <- tom_path1
+    #     break
+    #   } else {
+    #     if (file.exists(tom_path2)) {
+    #       tom_path <- tom_path2
+    #       break
+    #     }
+    #   }
+    # }
 
-  print(paste0("Waiting for TOM file: ", tom_path))
+    print(paste0("Waiting for TOM file: ", tom_path))
 
-  repeat {
-    if (file.exists(tom_path)) {
-      s1 <- file.info(tom_path)$size
-      Sys.sleep(3)
-      s2 <- file.info(tom_path)$size
-      if (!is.na(s1) && s1 == s2) break
-    } else {
-      Sys.sleep(3)
+    repeat {
+      if (file.exists(tom_path)) {
+        s1 <- file.info(tom_path)$size
+        Sys.sleep(3)
+        s2 <- file.info(tom_path)$size
+        if (!is.na(s1) && s1 == s2) break
+      } else {
+        Sys.sleep(3)
       }
     }
 
-  print(paste0("Loading TOM matrix file from: ", tom_path))
-  load(tom_path)
-  #TOM <- GetTOM(seurat_obj) # do not works well because the folder in container do not match with real location
-  print("TOM matrix loaded successfully")
-  
-  # TOM as matrix
-  TOM <- 1 - as.matrix(consTomDS) # as this is a distance object "TOM dissimilarity", is it necessary to tranform the data to obtain node connections
-  rownames(TOM) <- gene_name
-  colnames(TOM) <- gene_name
+    print(paste0("Loading TOM matrix file from: ", tom_path))
+    load(tom_path)
+    #TOM <- GetTOM(seurat_obj) # do not works well because the folder in container do not match with real location
+    print("TOM matrix loaded successfully")
+    
+    # TOM as matrix
+    TOM <- 1 - as.matrix(consTomDS) # as this is a distance object "TOM dissimilarity", is it necessary to tranform the data to obtain node connections
+    rownames(TOM) <- gene_name
+    colnames(TOM) <- gene_name
+  }
 
   # filter grey modules
   TOM <- TOM[nongrey_genes, nongrey_genes]
@@ -496,6 +587,16 @@ if(run_tf==TRUE){
     EdgeWeight = TOM[edges]
   )
   results_filt <- results[order(results$EdgeWeight),]
+
+  datExpr <- tryCatch(
+    as.matrix(GetDatExpr(seurat_obj)),
+    error = function(e) as.matrix(seurat_obj@misc[[seurat_obj@misc$active_wgcna]]$datExpr)
+  )
+  gene_cor <- WGCNA::cor(datExpr, use = "pairwise.complete.obs")
+  pair_idx <- cbind(as.character(results_filt$Gene1), as.character(results_filt$Gene2))
+  pair_sign <- as.numeric(sign(gene_cor[pair_idx]))
+  pair_sign[is.na(pair_sign) | pair_sign == 0] <- 1
+  results_filt$EdgeWeight <- abs(results_filt$EdgeWeight) * pair_sign
   #print("Keep more connected edges")
   #threshold <- 0.6**soft_power_try
   #results_filt$EdgeWeight[results_filt$EdgeWeight < threshold] = 0

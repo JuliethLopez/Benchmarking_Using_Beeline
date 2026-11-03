@@ -162,7 +162,7 @@ def main():
    # Compute edge ranked list using the borda method
     if (opts.borda):
         print('\n\nComputing edge ranked list using the borda method')
-        evalSummarizer.computeBorda()
+        evalSummarizer.computeBorda(selectedAlgorithms=['INFERELATOR','GENIE3','PIDC'])
 
 
     print('\n\nEvaluation complete...\n')

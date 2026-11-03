@@ -104,9 +104,9 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
         if "undirected" in resTypeFile:
             # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
             # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
-            value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
+            value_vars=['PIDC', 'GRNBOOST2', 'GENIE3', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
         else:
-            value_vars=['GRNBOOST2', 'INFERELATOR']
+            value_vars=['GRNBOOST2', 'GENIE3', 'INFERELATOR']
         
         modifiedDF = pd.melt(DF, id_vars = ['dataset'], value_vars = value_vars)
         
@@ -582,8 +582,8 @@ def main():
     
     clean_dataset_list = []
     for ds in dataset_list:
-        # Chain the replacements so both ESC and hHep prefixes are removed properly
-        clean_name = ds.replace("ESC/ESC_", "").replace("hHep/hHep_", "").replace("hHep_", "")
+        # Drop the group prefix so coplot headers match across hHep and ESC.
+        clean_name = ds.replace("ESC/ESC_", "").replace("hHep/hHep_", "").replace("hHep_", "").replace("ESC_", "")
         clean_name = clean_name.replace("_intersect", "")
         clean_dataset_list.append(clean_name)
 

@@ -167,11 +167,26 @@ head(string_filt)
 dim(string_filt) # 25527     3
 rm(string)
 
+# read regulatory events
+regulatory_events <- read_tsv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/julieth/9606.protein.regulatory.events.v12.5.txt.gz")
+head(regulatory_events[,c(1,2,5)])
+sum(regulatory_events$regulation_of_gene_expression!=0)
+colnames(regulatory_events)
+dim(regulatory_events) # 134611 13
+
+# how many regulatory events of gene expression are present in the string_filt table?
+string_filt <- string_filt %>% left_join(regulatory_events[,c(1,2,5)], by = c("protein1" = "protein1", "protein2" = "protein2")) %>%
+  filter(regulation_of_gene_expression!=0) %>% 
+  filter(!is.na(regulation_of_gene_expression))
+dim(string_filt) # 10396 4
+head(string_filt)
+
+
 # remove the "9606." prefix from the protein ids
 string_filt$protein1 <- sub("^9606\\.", "", string_filt$protein1)
 string_filt$protein2 <- sub("^9606\\.", "", string_filt$protein2)
 protein_ids <- unique(unique(string_filt$protein1), unique(string_filt$protein2))
-length(protein_ids) #19622
+length(protein_ids) #1590
 
 # get gene names from ensembl protein ids
 mart <- useEnsembl(
@@ -217,12 +232,12 @@ res <- uniprot_map(
 )
 
 res_reviewed = subset(res, Reviewed == "reviewed")
-dim(res_reviewed) #3753 8
+dim(res_reviewed) #1523 8
 head(res_reviewed)
 
 # select proteins with only one gene related
 res_reviewed_unique = res_reviewed[grepl("\\s",res_reviewed$`Gene.Names`)==FALSE,]
-dim(res_reviewed_unique) #954 8
+dim(res_reviewed_unique) #382 8
 head(res_reviewed_unique)
 
 table(not_annot %in% res_reviewed_unique$From) #we can add 1 proteins IDs more
@@ -250,6 +265,6 @@ string_genes <- string_filt %>%
   select("Gene1", "Gene2" = "external_gene_name", "Type")
 
 head(string_genes)
-dim(string_genes) #25527 3
+dim(string_genes) #10396 3
 
 write.csv(string_genes, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/julieth/STRING_regulatory_reference_2026.csv", row.names = FALSE, quote = FALSE)

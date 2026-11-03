@@ -33,6 +33,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-a', '--auprc', action="store_true", default=False, help="AUPRC box plot.")
     parser.add_argument('-r', '--auroc', action="store_true", default=False, help="AUROC box plot.")
     parser.add_argument('-e', '--epr', action="store_true", default=False, help="Early precision box plot.")
+    parser.add_argument('-s', '--signed', action="store_true", default=False, help="Signed early precision box plots (activation and inhibitory).")
     parser.add_argument('-v', '--overview', action="store_true", default=False, help="Overview plot.")
     parser.add_argument('-o', '--output', default='.', help="Output directory.")
     return parser
@@ -61,12 +62,13 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
     for i, dataset in enumerate(datasets):
         DF = DFs[i]
 
-        if "undirected" in resTypeFile:
-            # value_vars=['PIDC', 'GENIE3', 'GRNBOOST2', 'PPCOR', 'SCODE', 'GRISLI', 'SINGE', 'SCNS', 'LEAP', 'SINCERITIES', 'GRNVBEM', 'SCRIBE', 'SCSGL'])
-            # value_vars=['SINCERITIES', 'SCRIBE', 'SINGE', 'PPCOR', 'PIDC', 'GENIE3', 'LEAP', 'GRNBOOST2', 'GRISLI', 'GRNVBEM', 'SCNS', 'SCODE', 'SCSGL'])
-            value_vars=['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
+        if resTypeFile in ('EPr-Activation', 'EPr-Inhibitory'):
+            wanted = ['PPCOR', 'INFERELATOR', 'hdWGCNA']
+        elif "undirected" in resTypeFile:
+            wanted = ['PIDC', 'GRNBOOST2', 'GENIE3', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
         else:
-            value_vars=['GRNBOOST2', 'INFERELATOR']
+            wanted = ['GRNBOOST2', 'GENIE3', 'INFERELATOR']
+        value_vars = [c for c in wanted if c in DF.columns]
         
         modifiedDF = pd.melt(DF, id_vars = ['dataset'], value_vars = value_vars)
         
@@ -300,6 +302,11 @@ def main():
         print('\n\nGenerating Early Precision boxplot...')
         boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-undirected', 'Early Precision')
         boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-directed', 'Early Precision')
+
+    if (opts.signed):
+        print('\n\nGenerating signed Early Precision boxplot...')
+        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-Activation', 'Early Precision Activation')
+        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-Inhibitory', 'Early Precision Inhibitory')
     # 3. GENERACIÓN DEL OVERVIEW HEATMAP
     if opts.overview:
         print('\n\nGenerating Grouped Overview Heatmap...')
@@ -324,14 +331,16 @@ def main():
         full_output_path = Path(out_base) / sub_dir
         
         # Define metrics to plot (for the plot name) and their suffixes (the real name)
-        #resType = ['AUPRC Ratio', 'AUROC Ratio', 'Early Precision Ratio'] #pale3, pale3h,  pale3r, randvalues 0,0.5,0
-        #resSuffixes = ['AUPRC-undirected', 'AUROC-undirected', 'EPr-undirected']
-        #resType = ['AUPRC Ratio', 'AUROC Ratio', 'Early Precision Ratio'] #pale3, pale3h, pale3r, randvalues 0,0.5,0
-        #resSuffixes = ['AUPRC-directed', 'AUROC-directed', 'EPr-directed']
-        #resType = ['Early Precision Ratio (Inhibitory)', 'Early Precision Ratio (Activation)'] #pale3, pale3h, randvalues 0,0
-        #resSuffixes = ['EPr-Inhibitory', 'EPr-Activation']
-        resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI'] #arrow, arrow, arrow, randvalues 0 #MEJOR USAR OTHER_PLOTS.R o CUrated-sin grupos
-        resSuffixes = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
+        resType = ['AUPRC Ratio', 'AUROC Ratio', 'Early Precision Ratio'] #pale3, pale3h,  pale3r, randvalues 1,1,1
+        resSuffixes = ['AUPRC-undirected', 'AUROC-undirected', 'EPr-undirected']
+        # resType = ['AUPRC Ratio', 'AUROC Ratio', 'Early Precision Ratio'] #pale3, pale3h, pale3r, randvalues 1,1,1
+        # resSuffixes = ['AUPRC-directed', 'AUROC-directed', 'EPr-directed']
+        # if opts.signed:
+        #     resType = ['Early Precision Ratio (Inhibitory)', 'Early Precision Ratio (Activation)']
+        #     resSuffixes = ['EPr-Inhibitory', 'EPr-Activation']
+        # else:
+        #     resType = ['Motif-FBL', 'Motif-FFL', 'Motif-MI']
+        #     resSuffixes = ['NetworkMotifs-FBL', 'NetworkMotifs-FFL', 'NetworkMotifs-MI']
         #resType = ['Memory', 'Time'] #pale5r, pale5, randvalues 0, 0 #MEJOR USAR OTHER_PLOTS.R
         #resSuffixes = ['Memory', 'Times']
         
@@ -385,12 +394,16 @@ def main():
         # Limpieza y Orden
         overviewDF = overviewDF.dropna(how='all')
         #overviewDF = overviewDF.sort_values(by=(resType[0], cell_groups[-1]), ascending=True)
-        #undirected
-        #overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']).iloc[::-1]
-        # memory, time
-        #overviewDF = overviewDF.reindex(['PIDC', 'GRNBOOST2', 'PPCOR', 'INFERELATOR', 'hdWGCNA']).iloc[::-1]
-        #directed, motifs
-        overviewDF = overviewDF.reindex(['GRNBOOST2', 'INFERELATOR']).iloc[::-1]
+        signed_suffixes = {'EPr-Inhibitory', 'EPr-Activation'}
+        if any(suffix in signed_suffixes for suffix in resSuffixes):
+            algo_order = ['PPCOR', 'hdWGCNA', 'INFERELATOR']
+        elif any(suffix.endswith('-directed') for suffix in resSuffixes):
+            algo_order = ['GRNBOOST2', 'GENIE3', 'INFERELATOR']
+        elif any(suffix.endswith('-undirected') for suffix in resSuffixes):
+            algo_order = ['PIDC', 'GRNBOOST2', 'GENIE3', 'PPCOR', 'INFERELATOR', 'hdWGCNA', 'BORDA', 'sBORDA', 'mBORDA', 'smBORDA']
+        else:
+            algo_order = ['GRNBOOST2', 'INFERELATOR', 'GENIE3']
+        overviewDF = overviewDF.reindex(algo_order).iloc[::-1]
         print("DataFrame para Overview Heatmap (limpio y ordenado):")
         print(overviewDF)
             
@@ -408,12 +421,12 @@ def main():
         pale_bi = sns.color_palette("coolwarm", 11)
 
         # ---Parameter values for CoPlot---
-        # # Precision metrics
-        # rand_values = [0, 0.5, 0.5]
-        # shape_list = ['hm', 'hm', 'hm']
-        # palettes_list = [pale3, pale3h, pale3r]
-        # rotation_list = [0, 0, 0]
-        # switch_list = [False, False, False]
+        # Precision metrics
+        rand_values = [1, 1, 1]
+        shape_list = ['hm', 'hm', 'hm']
+        palettes_list = [pale3, pale3h, pale3r]
+        rotation_list = [0, 0, 0]
+        switch_list = [False, False, False]
 
         # # memory and time for methods without borda
         # rand_values = [0, 0]
@@ -422,12 +435,18 @@ def main():
         # rotation_list = [45, 45]
         # switch_list = [True, True]
 
-        # motifs
-        rand_values = [1, 1, 1]
-        shape_list = ['arrow', 'arrow', 'arrow']
-        palettes_list = [pale1, pale1, pale1]
-        rotation_list = [45, 45, 45]
-        switch_list = [False, False, False]
+        # if opts.signed:
+        #     rand_values = [1, 1]
+        #     shape_list = ['hm', 'hm']
+        #     palettes_list = [pale3, pale3h]
+        #     rotation_list = [0, 0]
+        #     switch_list = [False, False]
+        # else:
+        #     rand_values = [1, 1, 1]
+        #     shape_list = ['arrow', 'arrow', 'arrow']
+        #     palettes_list = [pale1, pale1, pale1]
+        #     rotation_list = [45, 45, 45]
+        #     switch_list = [False, False, False]
 
 
         COplot(

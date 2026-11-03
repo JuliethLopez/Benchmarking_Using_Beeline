@@ -93,7 +93,7 @@ input_settings:
           params:
               should_run: [True]
               run_tf: [False]
-              nThreads: [4] # number of threads to use
+              nThreads: [2] # number of threads to use
               nVariableFeatures: [2000]
               clustering_resolution: [0.5]
               metacells_k: [25] # nearest-neighbors parameter in MetacellsByGroups fuction. 25 by default in the fuction

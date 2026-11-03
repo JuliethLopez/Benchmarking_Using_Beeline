@@ -47,6 +47,9 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument('-e', '--epr', action="store_true", default=False,
         help="Generate box plot of early precision values for evaluated algorithms.\n")
 
+    parser.add_argument('-s', '--signed', action="store_true", default=False,
+        help="Generate box plots of signed early precision (activation and inhibitory).\n")
+
     parser.add_argument('-v', '--overview', action="store_true", default=False,
       help="Generate plot of AUPRC and early precision ratios relative to a random predictor.\n")
     
@@ -82,14 +85,26 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
                            + '-' + resTypeFile + '.csv', header = 0, index_col = 0)
         
         DF = DF.T
-        DFs.append(DF)    
-    
-    # Initialize plot window
-    f, axes = plt.subplots(len(datasets), 1, figsize=(1.5*max([len(DF.columns) for DF in DFs]), 5*len(datasets)))
+        DFs.append(DF)
+
+    # Size from the full algorithm table so directed and undirected figures
+    # share the same width. Algorithm subsets are applied only when plotting.
+    n_slots = max(len(DF.columns) for DF in DFs)
+    f, axes = plt.subplots(len(datasets), 1, figsize=(1.5 * n_slots, 5 * len(datasets)))
      
     for i, dataset in enumerate(datasets):
         DF = DFs[i]
-        modifiedDF = pd.melt(DF, id_vars=DF.index, value_vars=DF.columns)
+
+        if resTypeFile in ('EPr-Activation', 'EPr-Inhibitory'):
+            wanted = ['PPCOR', 'INFERELATOR', 'hdWGCNA']
+        elif "undirected" in resTypeFile:
+            wanted = list(DF.columns)
+        elif "directed" in resTypeFile:
+            wanted = ['GRNBOOST2', 'GENIE3', 'INFERELATOR']
+        else:
+            wanted = list(DF.columns)
+        value_vars = [c for c in wanted if c in DF.columns]
+        modifiedDF = pd.melt(DF, value_vars=value_vars, var_name='variable', value_name='value')
               
         if len(datasets) > 1:
             subax = axes[i]
@@ -98,7 +113,7 @@ def boxplot(opts, evalConfigs, datasets, randValue, resTypeFile, resTypeName):
         
         # Indicate random predictors value
         ax = sns.lineplot(y = randValue, 
-                          x=range(-1,len(DF.columns)+1), ax = subax)
+                          x=range(-1, len(value_vars)+1), ax = subax)
         ax.lines[0].set_linestyle("--")
         ax.lines[0].set_color("gray")
         
@@ -432,18 +447,23 @@ def main():
         print('\n\nGenerating Early Precision boxplot...')
         boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-undirected', 'Early Precision Undirected')
 
-    # Generate EPr boxplot
-    if (opts.epr):
         print('\n\nGenerating Early Precision boxplot...')
         boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-directed', 'Early Precision Directed')
+
+    if (opts.signed):
+        print('\n\nGenerating signed Early Precision boxplot...')
+        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-Activation', 'Early Precision Activation')
+        boxplot(opts, evalConfigs, datasets, randPredictor[dataset], 'EPr-Inhibitory', 'Early Precision Inhibitory')
 
     # Generate overview plot     
     if (opts.overview):
         print('\n\nGenerating overview plot...')
 
         #TODO add option to select overview columns
-        resType = ['Early Precision Ratio'] #'Times','Memory'
-        resTypeFileName = ['EPr-undirected'] #'Times','Memory'
+        #resType = ['Early Precision Ratio', 'Early Precision Ratio Directed']
+        #resTypeFileName = ['EPr-undirected', 'EPr-directed']
+        resType = ['Early Precision Ratio I', 'Early Precision Ratio A']
+        resTypeFileName = ['EPr-Inhibitory', 'EPr-Activation']
         #resType = ['Times','Memory']
         #resTypeFileName = ['Times','Memory']
         #resType = ['AUPRC Ratio', 'Stability Across Datasets']
@@ -502,7 +522,7 @@ def main():
         pale5 = sns.cubehelix_palette(rot=-0.3,n_colors = 11)
         pale5 = sns.color_palette('cividis_r', n_colors = 12)[:-1]
         COplot(overviewDF, width = 3*len(evalConfigs) + 5, height = len(algs) + 3, randValues = [0, 0, 0, 0],
-                shape = ['hm','hm','hm','arrow'], palettes = [pale3h, pale3, pale5 ,pale3r],
+                shape = ['hm','hm','hm','arrow'], palettes = [pale3r, pale3r, pale5 ,pale3],
                 levels = resType,  rotation = [0,0,0,0],
                 switch = [False, False, True, False])
         

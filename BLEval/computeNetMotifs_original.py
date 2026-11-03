@@ -31,7 +31,7 @@ def _process_algo(algo, outDir, EdgeDict, numEdges, refFB, refFF, refMI):
     :returns: (algo_name, fbl_ratio, ffl_ratio, mi_ratio)
     '''
     # PPCOR and PIDC produce undirected scores; skip them (same as original).
-    if algo[0] in ('PPCOR', 'PIDC'):
+    if algo[0] in ('PPCOR', 'PIDC', 'hdWGCNA'):
         return None
  
     rankedPath = Path(outDir + '/' + algo[0] + '/rankedEdges.csv')

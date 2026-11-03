@@ -8,7 +8,7 @@ head(data)
 dim(data) # 11515   425
 
 # read genes variability
-genes_variability <- read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/GeneOrdering.csv",
+genes_variability <- read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_Chip_seq/GeneOrdering.csv",
           header=TRUE, row.names=1)
 summary(genes_variability)
 head(genes_variability)
@@ -53,6 +53,11 @@ gene_selected = rownames(data_filered)
 chip_reference = read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/19009603/Networks/human/HepG2-ChIP-seq-network.csv", header=TRUE)
 dim(chip_reference) # 342863      2
 head(chip_reference)
+
+# check TF, targets and edges
+tf_in_selected = chip_reference[chip_reference$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 75
+length(setdiff(unique(chip_reference$Gene2), unique(tf_in_selected$Gene1))) #16747
 
 # add type of interaction, all will be positive because it is not known if the interaction is for activation or repression
 chip_reference = chip_reference %>% mutate(Type = "+")
@@ -141,6 +146,11 @@ reference = read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/anal
 dim(reference) # 342862      2
 head(reference)
 
+# check TF, targets and edges
+tf_in_selected = reference[reference$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 75
+length(setdiff(unique(reference$Gene2), unique(tf_in_selected$Gene1))) #16747
+
 #Remove repeated, auto loops
 reference <- reference %>% filter(Gene1 != Gene2)
 
@@ -148,7 +158,12 @@ reference <- reference %>% filter(Gene1 != Gene2)
 reference$Type = "+"
 
 reference_filtered = reference[(reference$Gene1 %in% gene_selected) & (reference$Gene2 %in% gene_selected),]
-dim(reference_filtered) # 7004 3
+dim(reference_filtered) # 11205 3
+
+# check TF, targets and edges
+tf_in_selected = reference_filtered[reference_filtered$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 72
+length(setdiff(unique(reference_filtered$Gene2), unique(tf_in_selected$Gene1))) #16747
 
 # save results
 write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_Chip_seq/HepG2-ChIP-seq-network.csv", row.names = FALSE, quote = FALSE)
@@ -157,6 +172,11 @@ write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_anal
 reference = read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/julieth/hTFtargets_TF-Target-liver.csv", header=TRUE)
 dim(reference) # 157768      3
 head(reference)
+
+# check TF, targets and edges
+tf_in_selected = reference[reference$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 72
+length(setdiff(unique(reference$Gene2), unique(tf_in_selected$Gene1))) #26636
 
 #Remove repeated, auto loops
 reference <- reference %>% filter(Gene1 != Gene2)
@@ -167,6 +187,11 @@ reference$Type = "+"
 reference_filtered = reference[(reference$Gene1 %in% gene_selected) & (reference$Gene2 %in% gene_selected),]
 dim(reference_filtered) # 2432 3
 
+# check TF, targets and edges
+tf_in_selected = reference_filtered[reference_filtered$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 72
+length(setdiff(unique(reference_filtered$Gene2), unique(tf_in_selected$Gene1))) #16747
+
 # save results
 write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_hTFtargets/hTFtargets_TF-Target-liver.csv", row.names = FALSE, quote = FALSE)
 
@@ -174,6 +199,11 @@ write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_anal
 reference = read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/julieth/RegNetwork_human_TF_Target.csv", header=TRUE)
 dim(reference) # 1112200      3
 head(reference)
+
+# check TF, targets and edges
+tf_in_selected = reference[reference$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 72
+length(setdiff(unique(reference$Gene2), unique(tf_in_selected$Gene1))) #16747
 
 #Remove repeated, auto loops
 reference <- reference %>% filter(Gene1 != Gene2)
@@ -183,6 +213,11 @@ reference$Type = "+"
 
 reference_filtered = reference[(reference$Gene1 %in% gene_selected) & (reference$Gene2 %in% gene_selected),]
 dim(reference_filtered) # 10328 3
+
+# check TF, targets and edges
+tf_in_selected = reference_filtered[reference_filtered$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 72
+length(setdiff(unique(reference_filtered$Gene2), unique(tf_in_selected$Gene1))) #16747
 
 # save results
 write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_RegNetwork/RegNetwork_human_TF_Target.csv", row.names = FALSE, quote = FALSE)
@@ -200,7 +235,12 @@ reference <- reference %>% filter(Gene1 != Gene2)
 reference$Type = "+"
 
 reference_filtered = reference[(reference$Gene1 %in% gene_selected) & (reference$Gene2 %in% gene_selected),]
-dim(reference_filtered) # 281688 3
+dim(reference_filtered) # 375222 3
+
+# check TF, targets and edges
+tf_in_selected = reference_filtered[reference_filtered$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 72
+length(setdiff(unique(reference_filtered$Gene2), unique(tf_in_selected$Gene1))) #16747
 
 # save results
 write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_STRING_2026/STRING_reference_2026.csv", row.names = FALSE, quote = FALSE)
@@ -217,22 +257,32 @@ reference <- reference %>% filter(Gene1 != Gene2)
 reference$Type = "+"
 
 reference_filtered = reference[(reference$Gene1 %in% gene_selected) & (reference$Gene2 %in% gene_selected),]
-dim(reference_filtered) # 1612 3
+dim(reference_filtered) # 2895 3
+
+# check TF, targets and edges
+tf_in_selected = reference_filtered[reference_filtered$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 72
+length(setdiff(unique(reference_filtered$Gene2), unique(tf_in_selected$Gene1))) #16747
 
 # save results
 write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_ns_Chip_seq/Non-specific-ChIP-seq-network.csv", row.names = FALSE, quote = FALSE)
 
 # reference 6
 reference = read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/experimental/julieth/STRING_regulatory_reference_2026.csv", header=TRUE)
-dim(reference) # 25527      3
+dim(reference) # 10396      3
 head(reference)
 
 #Remove repeated, auto loops
 reference <- reference %>% filter(Gene1 != Gene2)
 
 reference_filtered = reference[(reference$Gene1 %in% gene_selected) & (reference$Gene2 %in% gene_selected),]
-dim(reference_filtered) # 403 3
+dim(reference_filtered) # 116 3
+
+# check TF, targets and edges
+tf_in_selected = reference_filtered[reference_filtered$Gene1 %in% tf_all$TF,]
+length(unique(tf_in_selected$Gene1)) # 72
+length(setdiff(unique(reference_filtered$Gene2), unique(tf_in_selected$Gene1))) #16747
 
 # save results
-write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_STRING_2026/STRING_regulatory_reference_2026.csv", row.names = FALSE, quote = FALSE)
+write.csv(reference_filtered, "/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/inputs/experimental/hHep/hHep_STRING_reg_2026/STRING_regulatory_reference_2026.csv", row.names = FALSE, quote = FALSE)
 
