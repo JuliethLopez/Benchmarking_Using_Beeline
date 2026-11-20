@@ -1,3 +1,8 @@
+# This script prepares the references
+# hTFtargets. Here tissue specific regulations are extracted
+# RegNetwork. Here positive interactions are added if those are unknown
+# STRING and STRING regulatory interactions. Here gene names are added to the protein ids
+
 #library
 library(biomaRt)
 library(readr)

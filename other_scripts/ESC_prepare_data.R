@@ -1,3 +1,8 @@
+# This script prepares the data for the ESC dataset
+# Only genes from the ESC dataset are selected in reference networks
+# 2000 genes with high variability are selected
+# Self-loops are removed
+
 # libraries
 library(tidyr)
 library(dplyr)

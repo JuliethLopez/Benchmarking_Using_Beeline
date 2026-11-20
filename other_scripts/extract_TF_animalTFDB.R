@@ -1,3 +1,6 @@
+# It were explored different reference TF lists
+# AnimalTFDB and BeelineTF
+
 # read reference TF lists
 AnimalTFDB <- read.csv("/lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/Beeline/data/Homo_sapiens_TF.txt", sep="\t")
 head(AnimalTFDB)

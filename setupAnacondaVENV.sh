@@ -10,7 +10,7 @@ echo "Setting up Anaconda Python virtual environment..."
 # You must have a root Python environment installed in Conda equivalent to 3.7.1 or higher because of an Anaconda bug.
 # See https://github.com/ContinuumIO/anaconda-issues/issues/6698 as an example issue
 conda install python # ^ Reasoning for this line
-conda env create -f environment.yml 
+conda env create -f environment_new.yml 
 eval "$(conda shell.bash hook)"
 conda activate BEELINE
 

@@ -13,7 +13,7 @@ python BLPlotter-Curated-datasets.py --config config-files/config_curated.yaml -
 # python BLPlotter-Curated-groups.py --config /lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/STREAMLINE/STREAMLINE/config-files/Curated/config_mCAD.yaml --overview --output outputs_graphics/Curated
 # python BLPlotter-Curated-groups.py --config /lustre/scratch127/humgen/projects_v2/jaguar_analysis/analysis/jl38/STREAMLINE/STREAMLINE/config-files/Curated/config_VSC.yaml --overview --output outputs_graphics/Curated
 
-# tiempo y motivos
+# time and motifs
 Rscript other_scripts/other_plots.R
 
 # experimental

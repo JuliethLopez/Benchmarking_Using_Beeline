@@ -1,3 +1,6 @@
+# This script downloads the TFs list from the Chip Atlas
+# However Beeline has a bigger list of TFs
+
 import requests
 import pandas as pd
 from pathlib import Path
